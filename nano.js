@@ -1,6 +1,6 @@
 //Draw Nano Material
 
-function draw(div){
+function draw(nodes,links,div){
 	//Scegliere la width
 	var width =  window.innerWidth,
 	    height = window.innerHeight;

@@ -1,4 +1,4 @@
-function draw(){
+function draw(nodes,links){
     var width =  window.innerWidth,
         height = window.innerHeight;
 
@@ -21,8 +21,12 @@ function draw(){
     ];
 
     var svg = d3.select('body').append('svg')
+        .attr('id','container')
         .attr('width', width)
         .attr('height', height);
+
+        //add this for positioning the svg
+    //.attr('style','display:block;margin-left:auto; margin-top:auto');
 
 
     var force = d3.layout.force()
