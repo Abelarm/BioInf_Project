@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+.link {
+  stroke: #777;
+  stroke-opacity: 1;
+}
+
+</style>
+<body>
+<script src="d3.min.js"></script>
+<script>
+
+var width = 2000,
+    height = 2000;
+
+var color = d3.scale.category20();
+
+var force = d3.layout.force()
+    .charge(-500)
+    .linkDistance(50)
+    .friction(0.95)
+    .size([width, height]);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var link,node,FullGraph;
+var openedNode = {};
+
+d3.json("nano_cluster.json", function(error, fullgraph) {
+  if (error) throw error;
+
+  FullGraph = fullgraph;
+  console.log(fullgraph);
+
+  graph = JSON.parse('{"nodes":[], "links":[]}');
+
+  nodi = [];
+  linki = [];
+
+  nod_len = fullgraph.nodes.length;
+  for (index = 0; index < nod_len; ++index) {
+    nd = fullgraph.nodes[index]
+  
+    if (nd.group==1){
+      newnd = JSON.parse(JSON.stringify(nd));
+      nodi.push(newnd);
+    }
+  }
+  //console.log(nodi);
+  //console.log(linki);
+
+  graph.nodes = nodi;
+  graph.links = linki;
+
+  //console.log(graph);
+
+  force
+    .nodes(graph.nodes)
+    .links(graph.links);
+
+  link = svg.selectAll(".link")
+      .data(graph.links)
+      .enter()
+      .append("line")
+      .attr("class", "link")
+      .style("stroke-width", function(d) { return d.value });
+
+
+  node = svg.selectAll(".node")
+      .data(graph.nodes)
+      .enter()
+      .append("circle")
+      .attr("class", "node")
+      .attr("r", 10)
+      .style("fill", function(d) { return color(d.group); })
+      .on("dblclick", function(d){
+        if (! (d.name in openedNode)){
+                openedNode[d.name] = [];
+                addNodes(d);
+                return;
+        }
+        else{
+          if (("ChemOf"+d.name) in openedNode){
+            name = "ChemOf"+d.name;
+            for(i =0; i<graph.nodes.length; ++i){
+              if(graph.nodes[i].name = name){
+                console.log("Rimuovo "+name);
+                removeNodes(graph.nodes[i]);
+                console.log("-------FATTO-------");
+                break;
+              }
+            }
+
+          }
+          if (("PharOf"+d.name) in openedNode){
+            name = "PharOf"+d.name;
+            for(i =0; i<graph.nodes.length; ++i){
+              if(graph.nodes[i].name = name){
+                console.log("Rimuovo "+name);
+                removeNodes(graph.nodes[i]);
+                console.log("-------FATTO-------");
+                break;
+              }
+            }
+          }
+          if (("DiseOf"+d.name) in openedNode){
+            name = "DiseOf"+d.name;
+            for(i =0; i<graph.nodes.length; ++i){
+              if(graph.nodes[i].name = name){
+                console.log("Rimuovo "+name);
+                removeNodes(graph.nodes[i]);
+                console.log("-------FATTO-------");
+                break;
+              }
+            }
+          }
+          removeNodes(d);
+          return;
+        }
+      })
+
+  node.append("title")
+      .text(function(d) { return d.name; });
+
+  force.on("tick", function() {
+    //console.log("entro");
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    
+    node
+        .style("fill", function(d) { 
+          return color(d.group); 
+        })
+        .attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+      
+  });
+
+  force.start();
+});
+
+
+
+  function addNodes(d){
+    console.log(d);
+
+    //d.append("Opened","True");
+    
+    chem = JSON.parse(JSON.stringify(d));
+    chem.name = "ChemOf"+d.name;
+    chem.group = 4;
+
+    phar = JSON.parse(JSON.stringify(d));
+    phar.name = "PharOf"+d.name;
+    phar.group = 3;
+
+    dise = JSON.parse(JSON.stringify(d));
+    dise.name = "DiseOf"+d.name;
+    dise.group = 2;
+
+    graph.nodes.push(chem);
+    //openedNode[d.name].push(chem);
+    graph.nodes.push(phar);
+    //openedNode[d.name].push(phar);
+    graph.nodes.push(dise);
+    //openedNode[d.name].push(dise);
+ 
+    lin1 = JSON.parse('{"source":' +  nodi.indexOf(d) + ', "target": ' + nodi.indexOf(chem) + ', "value": 1}');
+    graph.links.push(lin1);
+    openedNode[d.name].push(lin1);
+    lin2 = JSON.parse('{"source":' + nodi.indexOf(d)+ ', "target": ' + nodi.indexOf(phar) + ', "value": 1}');
+    graph.links.push(lin2);
+    openedNode[d.name].push(lin2);
+    lin3 = JSON.parse('{"source":' + nodi.indexOf(d) + ', "target": ' + nodi.indexOf(dise) + ', "value": 1}');
+    graph.links.push(lin3);
+    openedNode[d.name].push(lin3);
+
+    console.log(graph.nodes);
+    console.log(graph.links);
+
+    restartAdd();
+  }
+
+  function addTrueNode(d,type){
+
+    fathers = Object.keys(openedNode);
+
+    var father;
+
+    for(index = 0; index < fathers.length; ++index){
+
+      f = fathers[index];
+
+      if (d.name == ("ChemOf"+f.name)){
+
+        father = f;
+        break;
+
+      }else{
+        
+        if (d.name == ("PharOf"+f.name)){
+
+          father = f;
+          break;
+
+        }else{
+
+          father = f;
+          break;
+
+          }
+        }
+    }
+
+    console.log("Father: " +father);
+
+    var index;
+    for(i =0; i<FullGraph.nodes.length; ++i){
+
+        if(FullGraph.nodes[i].name = father){
+          index=i;
+          break;
+        }
+    }
+
+    toAddLink = [];
+    toAddNodes = [];
+    IndNodes = graph.nodes.length;
+    for(j=0; j<FullGraph.links.length; ++j){
+
+      if ((FullGraph.links[j].source == index) && (FullGraph.nodes[FullGraph.links[j].target].group == type)){
+        
+        toAddNodes.push(JSON.parse(JSON.stringify(FullGraph.nodes[FullGraph.links[j].target])));
+
+        lin = JSON.parse(JSON.stringify(FullGraph.links[j]));
+        lin.source = graph.nodes.indexOf(d);
+        lin.target = IndNodes;
+        IndNodes++;
+        toAddLink.push(lin);
+      }
+    }
+
+    console.log(toAddLink.length);
+    console.log(toAddNodes.length);
+
+    openedNode[d.name].push.apply(openedNode[d.name],toAddLink);
+
+    graph.nodes.push.apply(graph.nodes,toAddNodes);
+    graph.links.push.apply(graph.links,toAddLink);
+
+    restartAdd();
+
+  }
+
+  function removeNodes(d){
+
+    console.log("Lunghezza link prima removeNodes:"+ link.data().length);
+    console.log("Lunghezza node prima removeNodes:"+ node.data().length);
+
+    toremove = openedNode[d.name];
+    console.log(toremove.length);
+
+    toremove.forEach(function(link) {
+
+        graph.nodes.splice(graph.nodes.indexOf(link.target),1);
+        graph.links.splice(graph.links.indexOf(link),1);
+
+    });
+
+    delete openedNode[d.name];
+
+    console.log("Lunghezza link dopo removeNodes:"+ graph.links.length);
+    console.log("Lunghezza node dopo removeNodes:"+ graph.nodes.length);
+    
+
+    restartRemove();
+
+  }
+
+  function restartAdd(){
+
+    console.log("Lunghezza link prima restart:"+ link.data().length);
+    console.log("Lunghezza node prima restart:"+ node.data().length);
+
+    link = link.data(graph.links);
+
+    link.enter()
+      .insert("line", ".node")
+      .attr("class", "link")
+      .style("stroke-width", function(d) { return d.value; });
+
+    console.log("Lunghezza link dopo restart:"+  link.data().length);
+    node = node.data(graph.nodes);
+
+    node.enter()
+      .append("circle")
+      .attr("class", "node")
+      .attr("r", 5)
+      .style("fill", function(d) { 
+        console.log(d);
+        return color(d.group); 
+      })
+      .on("dblclick",function(d){
+
+        console.log("clicked "+ d.name);
+        console.log("openedNode " + openedNode[d.name]);
+
+        if (d.name.indexOf("ChemOf") > -1){
+
+            if (!(d.name in openedNode) || openedNode[d.name] == 0){
+              console.log("Inserisco nodi di: "+ d.name);
+              openedNode[d.name] = [];
+              addTrueNode(d,4);
+              return;
+            }else{
+              console.log("Rimuovo nodi di: "+ d.name);
+              removeNodes(d);
+              return;
+            }
+        }
+        if (d.name.indexOf("PharOf") > -1){
+
+            if (! (d.name in openedNode) || openedNode[d.name] == 0 ){
+              console.log("Inserisco nodi di: "+ d.name);
+              openedNode[d.name] = [];          
+              addTrueNode(d,3);
+              return;
+            }else{
+              console.log("Rimuovo nodi di: "+ d.name);
+              removeNodes(d);
+              return;
+            }
+        }
+        if (d.name.indexOf("DiseOf") > -1){
+          
+          if (! (d.name in openedNode) || openedNode[d.name] == 0 ){
+              console.log("Inserisco nodi di: "+ d.name);
+              openedNode[d.name] = [];
+              addTrueNode(d,2);
+              return;
+            }else{
+              console.log("Rimuovo nodi di: "+ d.name);
+              removeNodes(d);
+              return;
+            }
+        }
+      });
+    console.log("Lunghezza node dopo restart:"+ node.data().length);
+    force.start();
+  }
+
+  function restartRemove(){
+
+    console.log("Lunghezza link prima restart:"+ link.data().length);
+    console.log("Lunghezza node prima restart:"+ node.data().length);
+
+    link = link.data(graph.links);
+
+    link.exit()
+        .remove();
+
+    link.enter()
+      .insert("line", ".node")
+      .attr("class", "link")
+      .style("stroke-width", function(d) { return d.value; });
+
+    console.log("Lunghezza link dopo restart:"+  link.data().length);
+    node = node.data(graph.nodes);
+
+    node.exit()
+        .remove();
+
+    console.log("Lunghezza node dopo restart:"+ node.data().length);
+    force.start();
+
+  }
+
+
+</script>
