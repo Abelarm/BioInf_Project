@@ -50,6 +50,7 @@ var svg = d3.select("body").append("svg")
 
 var link,node,gnodes,FullGraph;
 var openedNode = {};
+var numChem=0,numDrug=0,numDise=0;
 
 d3.json("nano_cluster.json", function(error, fullgraph) {
   if (error) throw error;
@@ -61,14 +62,22 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
 
   nodi = [];
   linki = [];
-
   nod_len = fullgraph.nodes.length;
   for (index = 0; index < nod_len; ++index) {
     nd = fullgraph.nodes[index]
-  
     if (nd.group==1){
       newnd = JSON.parse(JSON.stringify(nd));
       nodi.push(newnd);
+    }else{
+      if(nd.group==2){
+        numDise++;
+      }else{
+        if(nd.group==3){
+          numDrug++;
+        }else{
+          numChem++;
+        }
+      }
     }
   }
   //console.log(nodi);
@@ -162,7 +171,7 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
       
 
   //console.log(gnodes);
-  //console.log(node);
+  console.log(node);
   
 
   force.on("tick", function() {
@@ -184,13 +193,21 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
 
   force.on("end",function(){
 
-
     try{
       link.exit().remove();
       gnodes.exit().remove();
     }catch(err){
       console.warn(err);
     }
+
+    node
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
+
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
 
   });
 
@@ -208,6 +225,7 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
     chem.name = "ChemOf"+d.name;
     chem.group = 4;
     chemdegree = countDegree(d,chem.group);
+    chem.degree = chemdegree;
     chem.dim = Math.floor(chemdegree/6);
     //console.log("Degree: "+chemdegree + " Dim: " + chem.dim);
 
@@ -215,6 +233,8 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
     phar.name = "PharOf"+d.name;
     phar.group = 3;
     phardegree = countDegree(d,phar.group);
+    console.log("---------------------"+ (numDrug/phardegree));
+    phar.degree = phardegree;
     phar.dim = Math.floor(phardegree/6);
     //console.log("Degree: " +phardegree + " Dim: " + phar.dim);
 
@@ -222,6 +242,7 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
     dise.name = "DiseOf"+d.name;
     dise.group = 2;
     disedegree = countDegree(d,dise.group);
+    dise.degree = disedegree;
     dise.dim = Math.floor(disedegree/6);
     //console.log("Degree: "+disedegree + " Dim: " + dise.dim);
 
@@ -327,7 +348,7 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
     console.log("Lunghezza node prima removeNodes:"+ node.data().length);
 
     toremove = openedNode[d.name];
-    console.log(toremove.length);
+    //console.log(toremove.length);
 
     toremove.forEach(function(link) {
 
@@ -372,11 +393,11 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
 
     var wrongnode =gnodes.enter()
       .append("g")
+        .classed('gnode', true)
         .attr("dim",function(d){
           console.log(nodeSize(d));
           return nodeSize(d);
         })
-        .classed('gnode', true)
         .on("mouseover",mouseover)
         .on("mouseout",mouseout)
       .append("circle")
@@ -434,7 +455,6 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
         }
       });
   
-  
    for (i = 0; i < wrongnode[0].length; i++) {
       nd = wrongnode[0][i];
       if(!!nd){
@@ -444,12 +464,15 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
   
     console.log("Gnode");
     console.log(gnodes);
-    console.log("wrongnode")
-    console.log(wrongnode);
+    console.log("gnodes_data")
+    console.log(gnodes.data());
     console.log("node");
     console.log(node);
+    console.log("node_data");
+    console.log(node.data());
 
     console.log("Lunghezza node dopo restart:"+ node.data().length);
+    force.stop();
     force.start();
   }
 
@@ -472,9 +495,22 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
     gnodes = gnodes.data(graph.nodes);
 
     gnodes.exit()
-        .remove();
+        .remove(); 
+
+    
+    console.log("gnodes");
+    console.log(gnodes);
+    console.log("gnodes_data");
+    console.log(gnodes.data());
+    node = node.data(gnodes.data());
+    console.log("nodes");
+    console.log(node);
+    console.log("nodes_data");
+    console.log(node.data());
+  
 
     console.log("Lunghezza node dopo restart:"+ node.data().length);
+    force.stop();
     force.start();
 
   }
@@ -510,7 +546,7 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
       g.select("text").remove();
 
       g.append('svg:text')
-        .text(function(d) { return d.name })
+        .text(function(d) { return getText(d); })
         .style("fill",function(d){return color(d.group) })
         .style("stroke-width", ".5px")
         .style("font", options.fontSize + "px " + options.fontFamily)
@@ -571,6 +607,20 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
         return defaultdim;
       } 
     }
+  }
+
+  function getText(d){
+    name = d.name;
+    if (d.name.indexOf("ChemOf") > -1){
+      return "Chemical ("+ d.degree +")";
+    }
+    if (d.name.indexOf("PharOf") > -1){
+      return "Drug ("+ d.degree +")";
+    }
+    if (d.name.indexOf("DiseOf") > -1){
+      return "Disease ("+ d.degree +")";
+    }
+    return d.name;
   }
 
 </script>
