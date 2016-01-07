@@ -31,9 +31,9 @@ var stroke_width = 2;
 
 var options = {};
 
-options['fontSize'] = 17;
+options['fontSize'] = 20;
 options['fontFamily'] = "serif";
-options['opacityNoHover'] = 0.5;
+options['opacityNoHover'] = 0;
 options['clickTextSize'] = 25;
 
 var color = d3.scale.category20();
@@ -125,9 +125,9 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
             name = "ChemOf"+d.name;
             for(i =0; i<graph.nodes.length; ++i){
               if(graph.nodes[i].name = name){
-                console.log("Rimuovo "+name);
+                //console.log("Rimuovo "+name);
                 removeNodes(graph.nodes[i]);
-                console.log("-------FATTO-------");
+                //console.log("-------FATTO-------");
                 break;
               }
             }
@@ -137,9 +137,9 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
             name = "PharOf"+d.name;
             for(i =0; i<graph.nodes.length; ++i){
               if(graph.nodes[i].name = name){
-                console.log("Rimuovo "+name);
+                //console.log("Rimuovo "+name);
                 removeNodes(graph.nodes[i]);
-                console.log("-------FATTO-------");
+                //console.log("-------FATTO-------");
                 break;
               }
             }
@@ -148,9 +148,9 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
             name = "DiseOf"+d.name;
             for(i =0; i<graph.nodes.length; ++i){
               if(graph.nodes[i].name = name){
-                console.log("Rimuovo "+name);
+                //console.log("Rimuovo "+name);
                 removeNodes(graph.nodes[i]);
-                console.log("-------FATTO-------");
+                //console.log("-------FATTO-------");
                 break;
               }
             }
@@ -159,18 +159,10 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
           return;
         }
       });
+      
 
-  gnodes.append("svg:text")
-      .attr("class", "nodetext")
-      .attr("dx", 12)
-      .attr("dy", ".35em")
-      .text(function(d) { return d.name })
-      .style("font", options.fontSize + "px " + options.fontFamily)
-      .style("opacity", 0)
-      .style("pointer-events", "none");
-
-  console.log(gnodes);
-  console.log(node);
+  //console.log(gnodes);
+  //console.log(node);
   
 
   force.on("tick", function() {
@@ -190,13 +182,25 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
       
   });
 
+  force.on("end",function(){
+
+
+    try{
+      link.exit().remove();
+      gnodes.exit().remove();
+    }catch(err){
+      console.warn(err);
+    }
+
+  });
+
   force.start();
 });
 
 
 
   function addNodes(d){
-    console.log(d);
+    //console.log(d);
 
     //d.append("Opened","True");
     
@@ -205,21 +209,21 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
     chem.group = 4;
     chemdegree = countDegree(d,chem.group);
     chem.dim = Math.floor(chemdegree/6);
-    console.log("Degree: "+chemdegree + " Dim: " + chem.dim);
+    //console.log("Degree: "+chemdegree + " Dim: " + chem.dim);
 
     phar = JSON.parse(JSON.stringify(d));
     phar.name = "PharOf"+d.name;
     phar.group = 3;
     phardegree = countDegree(d,phar.group);
     phar.dim = Math.floor(phardegree/6);
-    console.log("Degree: " +phardegree + " Dim: " + phar.dim);
+    //console.log("Degree: " +phardegree + " Dim: " + phar.dim);
 
     dise = JSON.parse(JSON.stringify(d));
     dise.name = "DiseOf"+d.name;
     dise.group = 2;
     disedegree = countDegree(d,dise.group);
     dise.dim = Math.floor(disedegree/6);
-    console.log("Degree: "+disedegree + " Dim: " + dise.dim);
+    //console.log("Degree: "+disedegree + " Dim: " + dise.dim);
 
     graph.nodes.push(chem);
     
@@ -368,26 +372,18 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
 
     var wrongnode =gnodes.enter()
       .append("g")
+        .attr("dim",function(d){
+          console.log(nodeSize(d));
+          return nodeSize(d);
+        })
         .classed('gnode', true)
         .on("mouseover",mouseover)
         .on("mouseout",mouseout)
       .append("circle")
         .attr("class", "node")
         .attr("r", function(d){
-        if ("dim" in  d){
-          if (d.dim < maxdim){
-            if (d.dim < defaultdim){
-              return defaultdim+1;
-            }else{
-              return d.dim;
-            }
-          }else{
-            return (maxdim-1);
-          }
-        }else{
-          return defaultdim;
-        }
-      })
+          return nodeSize(d);
+        })
       .style("fill", function(d) { 
         //console.log(d);
         return color(d.group); 
@@ -445,15 +441,6 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
         node[0].push(nd);
       }
    }
-
-   gnodes.append("svg:text")
-      .attr("class", "nodetext")
-      .attr("dx", 12)
-      .attr("dy", ".35em")
-      .text(function(d) { return d.name })
-      .style("font", options.fontSize + "px " + options.fontFamily)
-      .style("opacity", 0)
-      .style("pointer-events", "none");
   
     console.log("Gnode");
     console.log(gnodes);
@@ -516,56 +503,75 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
       d3.select(this).select("circle").transition()
         .duration(750)
         .attr("r", function(d){return nodeSize(d)+5;});
-      console.log(d3.select(this).select("text"));
+      //console.log(d3.select(this).select("text"));
 
+      g = d3.select(this);
 
-      d3.select(this).select("text")
-      .transition()
-        .duration(750)
-        .attr("x",13)
-      .style("fill",function(d){ return color(d.group);})
-      .style("stroke-width", "0.3px")
+      g.select("text").remove();
+
+      g.append('svg:text')
+        .text(function(d) { return d.name })
+        .style("fill",function(d){return color(d.group) })
+        .style("stroke-width", ".5px")
+        .style("font", options.fontSize + "px " + options.fontFamily)
+        .transition()
+          .duration(750)
+          .attr("x",13)
+          .attr("class", "nodetext")
+          .attr("dx", 12)
+          .attr("dy", ".35em")
       .style("opacity", 1)
+      .style("pointer-events", "none")
       .style("font", options.clickTextSize + "px ")
-          .attr("x", function (d) {
+      .attr("x", function (d) {
             return d.x;
       })
-          .attr("y", function (d) {
+      .attr("y", function (d) {
             return d.y;
       
       });
 
-      /*
-      d3.select(this).select("text").transition()
-        .duration(750)
-        .attr("x", 13)
-        .style("stroke-width", ".5px")
-        .style("font", options.clickTextSize + "px ")
-        .style("opacity", 1);
-        console.log(d3.select(this).select("text"));
-        */
+      
     }
 
 
   function mouseout() {
       d3.select(this).select("circle").transition()
         .duration(750)
-        .attr("r", function(d){return nodeSize(d);});
-      console.log(d3.select(this).select("text"));
-      d3.select(this).select("text").transition()
+        .attr("r", function(d){
+          //console.log(nodeSize(d));
+          return nodeSize(d);
+        });
+      //console.log(d3.select(this).select("text"));
+      d3.select(this).select("text")
+      .transition()
         .duration(1250)
         .attr("x", 0)
         .style("font", options.fontSize + "px ") 
-        .style("opacity", options.opacityNoHover);
+        .style("opacity", options.opacityNoHover)
+        .remove();
+
     }
 
   function nodeSize(d){
-    if (d.group==1){
-      return maxdim;
+    //console.log(d);
+    if ("dim" in d){
+      if (d.dim < maxdim){
+        if (d.dim < defaultdim){
+          return defaultdim+1;
+        }else{
+          return d.dim;
+        }
+      }else{
+        return (maxdim-2);
+      }
     }else{
-      return (defaultdim+maxdim)/2;
+      if (d.group==1){
+        return maxdim;
+      }else{
+        return defaultdim;
+      } 
     }
   }
-
 
 </script>
