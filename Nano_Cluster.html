@@ -22,12 +22,13 @@
 <script src="d3.min.js"></script>
 <script>
 
-var width = 2000,
-    height = 2000;
+var width = 1300,
+    height = 1300;
 
 var maxdim = 20;
 var defaultdim = 5;
 var stroke_width = 2;
+var padding = 2;
 
 var options = {};
 
@@ -57,12 +58,13 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
 
   FullGraph = fullgraph;
   console.log(fullgraph);
+  console.log("LEN FULL GRAPH LINKS: " + fullgraph.links.length)
 
   graph = JSON.parse('{"nodes":[], "links":[]}');
 
   nodi = [];
   linki = [];
-  nod_len = fullgraph.nodes.length;
+  nod_len = FullGraph.nodes.length;
   for (index = 0; index < nod_len; ++index) {
     nd = fullgraph.nodes[index]
     if (nd.group==1){
@@ -80,6 +82,13 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
       }
     }
   }
+
+  for (var i = 0; i < FullGraph.links.length; i++) {
+    ln=FullGraph.links[i]
+    if((ln.source<=28) && ((ln.target<=28))){
+      linki.push(ln);
+    }
+  };
   //console.log(nodi);
   //console.log(linki);
 
@@ -105,7 +114,15 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
           d3.select(this)
             .style("opacity", 0.5);
       })
-      .style("stroke-width", function(d) { return stroke_width; });
+      .style("opacity",0.5)
+      .style("stroke-width", function(d) { return Math.abs(d.value); })
+      .style("stroke",function(d){
+        if(d.value>0){
+          return "#008000";
+        }else{
+          return "#FF0000";
+        }
+      });
 
 
   gnodes = svg.selectAll('g.gnode')
@@ -188,6 +205,8 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
         })
         .attr("cx", function(d) { return d.x; })
         .attr("cy", function(d) { return d.y; });
+
+    node.each(collide(0.5));
       
   });
 
@@ -302,24 +321,36 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
         }
     }
 
-    console.log("Father: " +father);
+    
 
     var index;
     for(i =0; i<FullGraph.nodes.length; ++i){
 
-        if(FullGraph.nodes[i].name = father){
+        console.log(father);
+        console.log(FullGraph.nodes[i].name);
+        console.log(FullGraph.nodes[i].name == father);
+        if(FullGraph.nodes[i].name == father){
           index=i;
           break;
         }
     }
 
+    //console.log("Father: " +father);
+    //console.log("index of father: " + index);
+
     toAddLink = [];
     toAddNodes = [];
     IndNodes = graph.nodes.length;
+    console.log("LEN FULL GRAPH LINKS: " + FullGraph.links.length)
+
+    var numlin = 0;
     for(j=0; j<FullGraph.links.length; ++j){
+
 
       if ((FullGraph.links[j].source == index) && (FullGraph.nodes[FullGraph.links[j].target].group == type)){
         
+        //console.log("Aggiungo");
+        //console.log(FullGraph.links[j]);
         toAddNodes.push(JSON.parse(JSON.stringify(FullGraph.nodes[FullGraph.links[j].target])));
 
         lin = JSON.parse(JSON.stringify(FullGraph.links[j]));
@@ -329,6 +360,8 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
         toAddLink.push(lin);
       }
     }
+
+    //console.log("---------------NUMERO NODI: " + numlin);
 
     console.log(toAddLink.length);
     console.log(toAddNodes.length);
@@ -519,7 +552,7 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
 
     for(i =0; i<FullGraph.nodes.length; ++i){
 
-        if(FullGraph.nodes[i].name = d.name){
+        if(FullGraph.nodes[i].name == d.name){
           index=i;
           break;
         }
@@ -556,6 +589,7 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
           .attr("class", "nodetext")
           .attr("dx", 12)
           .attr("dy", ".35em")
+      .style("z",2)
       .style("opacity", 1)
       .style("pointer-events", "none")
       .style("font", options.clickTextSize + "px ")
@@ -612,15 +646,41 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
   function getText(d){
     name = d.name;
     if (d.name.indexOf("ChemOf") > -1){
-      return "Chemical ("+ d.degree +")";
+      return "Chemical ("+ ((d.degree*100)/numChem).toFixed(2) +"%)";
     }
     if (d.name.indexOf("PharOf") > -1){
-      return "Drug ("+ d.degree +")";
+      return "Drug ("+ ((d.degree*100)/numDrug).toFixed(2) +"%)";
     }
     if (d.name.indexOf("DiseOf") > -1){
-      return "Disease ("+ d.degree +")";
+      return "Disease ("+ ((d.degree*100)/numDise).toFixed(2) +"%)";
     }
     return d.name;
+  }
+
+  function collide(alpha) {
+    var quadtree = d3.geom.quadtree(graph.nodes);
+    return function(d) {
+      var rb = 2*d.r + padding,
+          nx1 = d.x - rb,
+          nx2 = d.x + rb,
+          ny1 = d.y - rb,
+          ny2 = d.y + rb;
+      quadtree.visit(function(quad, x1, y1, x2, y2) {
+        if (quad.point && (quad.point !== d)) {
+          var x = d.x - quad.point.x,
+              y = d.y - quad.point.y,
+              l = Math.sqrt(x * x + y * y);
+            if (l < rb) {
+            l = (l - rb) / l * alpha;
+            d.x -= x *= l;
+            d.y -= y *= l;
+            quad.point.x += x;
+            quad.point.y += y;
+          }
+        }
+        return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+      });
+    };
   }
 
 </script>
