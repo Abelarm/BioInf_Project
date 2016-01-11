@@ -1,0 +1,6 @@
+dependencies:
+  - name: nano_cluster
+    version: 0.0.1
+    src: "htmlwidgets/lib/d3.min"
+    script: 
+      - d3.min.js
