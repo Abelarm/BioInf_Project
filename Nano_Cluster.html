@@ -40,7 +40,7 @@ options['clickTextSize'] = 25;
 var color = d3.scale.category20();
 
 var force = d3.layout.force()
-    .charge(-500)
+    .charge(-400)
     .linkDistance(50)
     .friction(0.95)
     .size([width, height]);
@@ -610,7 +610,20 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
         .duration(750)
         .attr("r", function(d){
           //console.log(nodeSize(d));
-          return nodeSize(d);
+          if(d.group!=1){
+            if (d.name.indexOf("ChemOf") > -1){
+                return nodeSize(d);
+            }
+            if (d.name.indexOf("PharOf") > -1){
+                return nodeSize(d);
+            }
+            if (d.name.indexOf("DiseOf") > -1){
+                return nodeSize(d);
+            }
+            return nodeSize(d)+5;
+          }else{
+            return nodeSize(d);
+          }
         });
       //console.log(d3.select(this).select("text"));
       d3.select(this).select("text")
