@@ -3,7 +3,7 @@ library(nanocluster)
 
 shinyUI(fluidPage(
   
-  titlePanel("Shiny networkD3 "),
+  titlePanel("Shiny nanocluster"),
   
   sidebarLayout(
     sidebarPanel(
