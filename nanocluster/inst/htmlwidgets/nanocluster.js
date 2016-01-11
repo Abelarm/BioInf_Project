@@ -135,8 +135,8 @@ HTMLWidgets.widget({
               .attr("dim",maxdim)
               .on("mouseover",mouseover)
               .on("mouseout",mouseout)
-              .style("stroke",#fff)
-              .style("stroke-width", 1.5px);
+              .style("stroke",'#fff')
+              .style("stroke-width", "1.5px");
 
 
       node = gnodes
@@ -189,7 +189,7 @@ HTMLWidgets.widget({
               return;
             }
           })
-          .style("stroke", #fff)
+          .style("stroke", '#fff')
           .style("stroke-width", 1);
           
 
@@ -701,5 +701,5 @@ HTMLWidgets.widget({
           });
         };
       }
-    },
-}
+    }
+});
