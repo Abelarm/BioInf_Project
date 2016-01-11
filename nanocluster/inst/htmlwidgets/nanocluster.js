@@ -26,14 +26,14 @@ HTMLWidgets.widget({
   renderValue: function(el, x, force) {
 
     // Compute the node radius  using the javascript math expression specified
-
     var maxdim = 20;
     var defaultdim = 5;
     var stroke_width = 2;
     var padding = 2;
 
     var options = {};
-
+    var force = force;
+    
     options['fontSize'] = 20;
     options['fontFamily'] = "serif";
     options['opacityNoHover'] = 0;
@@ -41,7 +41,7 @@ HTMLWidgets.widget({
 
     var color = d3.scale.category20();
 
-    var force = d3.layout.force()
+    force
         .charge(-400)
         .linkDistance(50)
         .friction(0.95)

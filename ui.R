@@ -1,12 +1,18 @@
 library(shiny)
 library(nanocluster)
 
-ui = shinyUI(fluidPage(
-  nanoClusterOutput('nanocluster')
+shinyUI(fluidPage(
+  
+  titlePanel("Shiny networkD3 "),
+  
+  sidebarLayout(
+    sidebarPanel(
+      numericInput("opacity", "Opacity", 0.6, min = 0.1, max = 1, step = .1)
+    ),
+    mainPanel(
+      tabsetPanel(
+        tabPanel("Nanocluster", nanoClusterOutput("nanocluster"))
+      )
+    )
+  )
 ))
-
-server = function(input, output) {
-  output$nanocluster <- renderNanoCluster(nanocluster())
-}
-
-shinyApp(ui = ui, server = server)

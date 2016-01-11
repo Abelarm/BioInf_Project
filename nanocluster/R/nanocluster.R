@@ -1,8 +1,14 @@
 #' @import htmlwidgets
 #' @export
 nanocluster <- function(height = NULL, width = NULL){
-    htmlwidgets::createWidget(name = "nanocluster", width = width, height = height, htmlwidgets::sizingPolicy(padding = 10, browser.fill = TRUE))
-}
+                    htmlwidgets::createWidget(name = "nanocluster", 
+                                              width = width,
+                                              height = height, 
+                                              htmlwidgets::sizingPolicy(padding = 10, browser.fill = TRUE),
+                                              package = "nanocluster"
+                                              )
+                              
+                }
 
 # Binding for shiny
 #' @export
