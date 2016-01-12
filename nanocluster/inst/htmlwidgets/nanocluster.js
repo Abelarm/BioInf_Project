@@ -87,8 +87,12 @@ HTMLWidgets.widget({
         linki.push(ln);
       }
     };
-    //console.log(nodi);
-    //console.log(linki);
+    
+    // alert(numDrug);
+    // alert(numChem);
+    // alert(numDise);
+    //alert(nodi);
+    //alert(linki);
     
     //END DATA PARSING
     
@@ -165,9 +169,9 @@ HTMLWidgets.widget({
               name = "ChemOf"+d.name;
               for(i =0; i<graph.nodes.length; ++i){
                 if(graph.nodes[i].name = name){
-                  //console.log("Rimuovo "+name);
+                  //alert("Rimuovo "+name);
                   removeNodes(graph.nodes[i]);
-                  //console.log("-------FATTO-------");
+                  //alert("-------FATTO-------");
                   break;
                 }
               }
@@ -177,9 +181,9 @@ HTMLWidgets.widget({
               name = "PharOf"+d.name;
               for(i =0; i<graph.nodes.length; ++i){
                 if(graph.nodes[i].name = name){
-                  //console.log("Rimuovo "+name);
+                  //alert("Rimuovo "+name);
                   removeNodes(graph.nodes[i]);
-                  //console.log("-------FATTO-------");
+                  //alert("-------FATTO-------");
                   break;
                 }
               }
@@ -188,9 +192,9 @@ HTMLWidgets.widget({
               name = "DiseOf"+d.name;
               for(i =0; i<graph.nodes.length; ++i){
                 if(graph.nodes[i].name = name){
-                  //console.log("Rimuovo "+name);
+                  //alert("Rimuovo "+name);
                   removeNodes(graph.nodes[i]);
-                  //console.log("-------FATTO-------");
+                  //alert("-------FATTO-------");
                   break;
                 }
               }
@@ -203,13 +207,13 @@ HTMLWidgets.widget({
         .style("stroke-width", 1);
         
 
-    //console.log(gnodes);
-    console.log(node);
+    //alert(gnodes);
+    alert(node);
     
     //END RENDER, SUPPORT FUNCTIONS HERE
      
     function tickfunction() {
-      //console.log("entro");
+      //alert("entro");
       link.attr("x1", function(d) { return d.source.x; })
           .attr("y1", function(d) { return d.source.y; })
           .attr("x2", function(d) { return d.target.x; })
@@ -251,7 +255,7 @@ HTMLWidgets.widget({
       
       
     function addNodes(d){
-      //console.log(d);
+      //alert(d);
 
       //d.append("Opened","True");
       
@@ -261,16 +265,16 @@ HTMLWidgets.widget({
       chemdegree = countDegree(d,chem.group);
       chem.degree = chemdegree;
       chem.dim = Math.floor(chemdegree/6);
-      //console.log("Degree: "+chemdegree + " Dim: " + chem.dim);
+      //alert("Degree: "+chemdegree + " Dim: " + chem.dim);
 
       phar = JSON.parse(JSON.stringify(d));
       phar.name = "PharOf"+d.name;
       phar.group = 3;
       phardegree = countDegree(d,phar.group);
-      console.log("---------------------"+ (numDrug/phardegree));
+      alert("---------------------"+ (numDrug/phardegree));
       phar.degree = phardegree;
       phar.dim = Math.floor(phardegree/6);
-      //console.log("Degree: " +phardegree + " Dim: " + phar.dim);
+      //alert("Degree: " +phardegree + " Dim: " + phar.dim);
 
       dise = JSON.parse(JSON.stringify(d));
       dise.name = "DiseOf"+d.name;
@@ -278,7 +282,7 @@ HTMLWidgets.widget({
       disedegree = countDegree(d,dise.group);
       dise.degree = disedegree;
       dise.dim = Math.floor(disedegree/6);
-      //console.log("Degree: "+disedegree + " Dim: " + dise.dim);
+      //alert("Degree: "+disedegree + " Dim: " + dise.dim);
 
       graph.nodes.push(chem);
       
@@ -299,8 +303,8 @@ HTMLWidgets.widget({
       graph.links.push(lin3);
       openedNode[d.name].push(lin3);
 
-      console.log(graph.nodes);
-      console.log(graph.links);
+      alert(graph.nodes);
+      alert(graph.links);
 
       restartAdd();
     }
@@ -341,22 +345,22 @@ HTMLWidgets.widget({
       var index;
       for(i =0; i<FullGraph.nodes.length; ++i){
 
-          console.log(father);
-          console.log(FullGraph.nodes[i].name);
-          console.log(FullGraph.nodes[i].name == father);
+          alert(father);
+          alert(FullGraph.nodes[i].name);
+          alert(FullGraph.nodes[i].name == father);
           if(FullGraph.nodes[i].name == father){
             index=i;
             break;
           }
       }
 
-      //console.log("Father: " +father);
-      //console.log("index of father: " + index);
+      //alert("Father: " +father);
+      //alert("index of father: " + index);
 
       toAddLink = [];
       toAddNodes = [];
       IndNodes = graph.nodes.length;
-      console.log("LEN FULL GRAPH LINKS: " + FullGraph.links.length)
+      alert("LEN FULL GRAPH LINKS: " + FullGraph.links.length)
 
       var numlin = 0;
       for(j=0; j<FullGraph.links.length; ++j){
@@ -364,8 +368,8 @@ HTMLWidgets.widget({
 
         if ((FullGraph.links[j].source == index) && (FullGraph.nodes[FullGraph.links[j].target].group == type)){
           
-          //console.log("Aggiungo");
-          //console.log(FullGraph.links[j]);
+          //alert("Aggiungo");
+          //alert(FullGraph.links[j]);
           toAddNodes.push(JSON.parse(JSON.stringify(FullGraph.nodes[FullGraph.links[j].target])));
 
           lin = JSON.parse(JSON.stringify(FullGraph.links[j]));
@@ -376,10 +380,10 @@ HTMLWidgets.widget({
         }
       }
 
-      //console.log("---------------NUMERO NODI: " + numlin);
+      //alert("---------------NUMERO NODI: " + numlin);
 
-      console.log(toAddLink.length);
-      console.log(toAddNodes.length);
+      alert(toAddLink.length);
+      alert(toAddNodes.length);
 
       openedNode[d.name].push.apply(openedNode[d.name],toAddLink);
 
@@ -392,11 +396,11 @@ HTMLWidgets.widget({
 
     function removeNodes(d){
 
-      console.log("Lunghezza link prima removeNodes:"+ link.data().length);
-      console.log("Lunghezza node prima removeNodes:"+ node.data().length);
+      alert("Lunghezza link prima removeNodes:"+ link.data().length);
+      alert("Lunghezza node prima removeNodes:"+ node.data().length);
 
       toremove = openedNode[d.name];
-      //console.log(toremove.length);
+      //alert(toremove.length);
 
       toremove.forEach(function(link) {
 
@@ -407,8 +411,8 @@ HTMLWidgets.widget({
 
       delete openedNode[d.name];
 
-      console.log("Lunghezza link dopo removeNodes:"+ graph.links.length);
-      console.log("Lunghezza node dopo removeNodes:"+ graph.nodes.length);
+      alert("Lunghezza link dopo removeNodes:"+ graph.links.length);
+      alert("Lunghezza node dopo removeNodes:"+ graph.nodes.length);
       
 
       restartRemove();
@@ -417,8 +421,8 @@ HTMLWidgets.widget({
 
     function restartAdd(){
 
-      console.log("Lunghezza link prima restart:"+ link.data().length);
-      console.log("Lunghezza node prima restart:"+ node.data().length);
+      alert("Lunghezza link prima restart:"+ link.data().length);
+      alert("Lunghezza node prima restart:"+ node.data().length);
 
       link = link.data(graph.links);
 
@@ -436,14 +440,14 @@ HTMLWidgets.widget({
         .style("opacity",0.5)
         .style("stroke-width", function(d) { return stroke_width; });
 
-      console.log("Lunghezza link dopo restart:"+  link.data().length);
+      alert("Lunghezza link dopo restart:"+  link.data().length);
       gnodes = gnodes.data(graph.nodes);
 
       var wrongnode =gnodes.enter()
         .append("g")
           .classed('gnode', true)
           .attr("dim",function(d){
-            console.log(nodeSize(d));
+            alert(nodeSize(d));
             return nodeSize(d);
           })
           .on("mouseover",mouseover)
@@ -454,23 +458,23 @@ HTMLWidgets.widget({
             return nodeSize(d);
           })
         .style("fill", function(d) { 
-          //console.log(d);
+          //alert(d);
           return color(d.group); 
         })
         .on("dblclick",function(d){
 
-          console.log("clicked "+ d.name);
-          console.log("openedNode " + openedNode[d.name]);
+          alert("clicked "+ d.name);
+          alert("openedNode " + openedNode[d.name]);
 
           if (d.name.indexOf("ChemOf") > -1){
 
               if (!(d.name in openedNode) || openedNode[d.name] == 0){
-                console.log("Inserisco nodi di: "+ d.name);
+                alert("Inserisco nodi di: "+ d.name);
                 openedNode[d.name] = [];
                 addTrueNode(d,4);
                 return;
               }else{
-                console.log("Rimuovo nodi di: "+ d.name);
+                alert("Rimuovo nodi di: "+ d.name);
                 removeNodes(d);
                 return;
               }
@@ -478,12 +482,12 @@ HTMLWidgets.widget({
           if (d.name.indexOf("PharOf") > -1){
 
               if (! (d.name in openedNode) || openedNode[d.name] == 0 ){
-                console.log("Inserisco nodi di: "+ d.name);
+                alert("Inserisco nodi di: "+ d.name);
                 openedNode[d.name] = [];          
                 addTrueNode(d,3);
                 return;
               }else{
-                console.log("Rimuovo nodi di: "+ d.name);
+                alert("Rimuovo nodi di: "+ d.name);
                 removeNodes(d);
                 return;
               }
@@ -491,12 +495,12 @@ HTMLWidgets.widget({
           if (d.name.indexOf("DiseOf") > -1){
             
             if (! (d.name in openedNode) || openedNode[d.name] == 0 ){
-                console.log("Inserisco nodi di: "+ d.name);
+                alert("Inserisco nodi di: "+ d.name);
                 openedNode[d.name] = [];
                 addTrueNode(d,2);
                 return;
               }else{
-                console.log("Rimuovo nodi di: "+ d.name);
+                alert("Rimuovo nodi di: "+ d.name);
                 removeNodes(d);
                 return;
               }
@@ -510,24 +514,24 @@ HTMLWidgets.widget({
         }
      }
 
-      console.log("Gnode");
-      console.log(gnodes);
-      console.log("gnodes_data")
-      console.log(gnodes.data());
-      console.log("node");
-      console.log(node);
-      console.log("node_data");
-      console.log(node.data());
+      alert("Gnode");
+      alert(gnodes);
+      alert("gnodes_data")
+      alert(gnodes.data());
+      alert("node");
+      alert(node);
+      alert("node_data");
+      alert(node.data());
 
-      console.log("Lunghezza node dopo restart:"+ node.data().length);
+      alert("Lunghezza node dopo restart:"+ node.data().length);
       force.stop();
       force.start();
     }
 
     function restartRemove(){
 
-      console.log("Lunghezza link prima restart:"+ link.data().length);
-      console.log("Lunghezza node prima restart:"+ node.data().length);
+      alert("Lunghezza link prima restart:"+ link.data().length);
+      alert("Lunghezza node prima restart:"+ node.data().length);
 
       link = link.data(graph.links);
 
@@ -539,25 +543,25 @@ HTMLWidgets.widget({
         .attr("class", "link")
         .style("stroke-width", function(d) { return d.value; });
 
-      console.log("Lunghezza link dopo restart:"+  link.data().length);
+      alert("Lunghezza link dopo restart:"+  link.data().length);
       gnodes = gnodes.data(graph.nodes);
 
       gnodes.exit()
           .remove(); 
 
       
-      console.log("gnodes");
-      console.log(gnodes);
-      console.log("gnodes_data");
-      console.log(gnodes.data());
+      alert("gnodes");
+      alert(gnodes);
+      alert("gnodes_data");
+      alert(gnodes.data());
       node = node.data(gnodes.data());
-      console.log("nodes");
-      console.log(node);
-      console.log("nodes_data");
-      console.log(node.data());
+      alert("nodes");
+      alert(node);
+      alert("nodes_data");
+      alert(node.data());
 
 
-      console.log("Lunghezza node dopo restart:"+ node.data().length);
+      alert("Lunghezza node dopo restart:"+ node.data().length);
       force.stop();
       force.start();
 
@@ -587,7 +591,7 @@ HTMLWidgets.widget({
         d3.select(this).select("circle").transition()
           .duration(750)
           .attr("r", function(d){return nodeSize(d)+5;});
-        //console.log(d3.select(this).select("text"));
+        //alert(d3.select(this).select("text"));
 
         g = d3.select(this);
 
@@ -624,7 +628,7 @@ HTMLWidgets.widget({
         d3.select(this).select("circle").transition()
           .duration(750)
           .attr("r", function(d){
-            //console.log(nodeSize(d));
+            //alert(nodeSize(d));
             if(d.group!=1){
               if (d.name.indexOf("ChemOf") > -1){
                   return nodeSize(d);
@@ -640,7 +644,7 @@ HTMLWidgets.widget({
               return nodeSize(d);
             }
           });
-        //console.log(d3.select(this).select("text"));
+        //alert(d3.select(this).select("text"));
         d3.select(this).select("text")
         .transition()
           .duration(1250)
@@ -651,7 +655,7 @@ HTMLWidgets.widget({
       }
 
     function nodeSize(d){
-      //console.log(d);
+      //alert(d);
       if ("dim" in d){
         if (d.dim < maxdim){
           if (d.dim < defaultdim){
