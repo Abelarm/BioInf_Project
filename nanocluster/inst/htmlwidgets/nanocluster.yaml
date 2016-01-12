@@ -3,4 +3,4 @@ dependencies:
     version: 0.0.1
     src: "htmlwidgets/lib/d3"
     script: 
-      - d3.js
+      - d3.min.js
