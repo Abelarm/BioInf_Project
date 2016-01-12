@@ -47,10 +47,15 @@ HTMLWidgets.widget({
     var buonded = false;
     var clickAction = null;
     var clickTextSize = fontSize * 2.5;
+    var bounded = false;
     
     // convert links and nodes data frames to d3 friendly format
-    var links = HTMLWidgets.dataframeToD3(x.links);
-    var nodes = HTMLWidgets.dataframeToD3(x.nodes);
+    alert(JSON.stringify(x));
+    graph = JSON.parse(JSON.stringify(x));
+    var links = (graph.nodes);
+    var nodes = (graph.links);
+    alert(JSON.stringify(links));
+    alert(JSON.stringify(nodes));
 
     // get the width and height
     width = el.offsetWidth;
@@ -91,7 +96,7 @@ HTMLWidgets.widget({
         .append("g")
 
     // add zooming if requested
-    if (options.zoom) {
+    if (zoom) {
       function redraw() {
         d3.select(el).select(".zoom-layer").attr("transform",
           "translate(" + d3.event.translate + ")"+
@@ -196,7 +201,7 @@ HTMLWidgets.widget({
     }
 
     // add legend option
-    if(options.legend){
+    if(legend){
         var legendRectSize = 18;
         var legendSpacing = 4;
         var legend = svg.selectAll('.legend')
