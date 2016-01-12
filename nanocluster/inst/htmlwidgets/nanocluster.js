@@ -25,7 +25,6 @@ HTMLWidgets.widget({
 
   renderValue: function(el, x, force) {
 
-    // Compute the node radius  using the javascript math expression specified
     var maxdim = 20;
     var defaultdim = 5;
     var stroke_width = 2;
@@ -55,7 +54,7 @@ HTMLWidgets.widget({
 
     nodi = [];
     linki = [];
-    nodes = FullGraph.nodes;
+    
     nod_len = FullGraph.nodes.name.length;
     for (index = 0; index < nod_len; ++index) {
       nd = FullGraph.nodes.name[index];
@@ -254,10 +253,12 @@ HTMLWidgets.widget({
       
       
       
-    function addNodes(d){
+    function addNodes(d){ //ok!
       //alert(JSON.stringify(d));
 
       //d.append("Opened","True");
+      
+      //alert("Num Archi prima: " + graph.links.length);
       
       chem = JSON.parse(JSON.stringify(d));
       chem.name = "ChemOf"+d.name;
@@ -292,16 +293,21 @@ HTMLWidgets.widget({
       //openedNode[d.name].push(phar);
       graph.nodes.push(dise);
       //openedNode[d.name].push(dise);
-
+    
+      //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(chem));
       lin1 = JSON.parse('{"source":' +  nodi.indexOf(d) + ', "target": ' + nodi.indexOf(chem) + ', "value": 1}');
       graph.links.push(lin1);
       openedNode[d.name].push(lin1);
+      //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(phar));
       lin2 = JSON.parse('{"source":' + nodi.indexOf(d)+ ', "target": ' + nodi.indexOf(phar) + ', "value": 1}');
       graph.links.push(lin2);
       openedNode[d.name].push(lin2);
+      //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(dise));
       lin3 = JSON.parse('{"source":' + nodi.indexOf(d) + ', "target": ' + nodi.indexOf(dise) + ', "value": 1}');
       graph.links.push(lin3);
       openedNode[d.name].push(lin3);
+      
+      //alert("Num Archi dopo: " + graph.links.length);
 
       //alert(graph.nodes);
       //alert(graph.links);
@@ -343,12 +349,12 @@ HTMLWidgets.widget({
       
 
       var index;
-      for(i =0; i<FullGraph.nodes.length; ++i){
+      for(i =0; i<FullGraph.nodes.name.length; ++i){
 
           //alert(father);
           //alert(FullGraph.nodes[i].name);
           //alert(FullGraph.nodes[i].name == father);
-          if(FullGraph.nodes[i].name == father){
+          if(FullGraph.nodes.name[i] == father){
             index=i;
             break;
           }
@@ -360,21 +366,26 @@ HTMLWidgets.widget({
       toAddLink = [];
       toAddNodes = [];
       IndNodes = graph.nodes.length;
-      //alert("LEN FULL GRAPH LINKS: " + FullGraph.links.length)
+      //alert("LEN FULL GRAPH LINKS: " + FullGraph.links.source.length)
 
       var numlin = 0;
-      for(j=0; j<FullGraph.links.length; ++j){
+      for(j=0; j<FullGraph.links.source.length; ++j){
 
 
-        if ((FullGraph.links[j].source == index) && (FullGraph.nodes[FullGraph.links[j].target].group == type)){
+        if ((FullGraph.links.source[j] == index) && (FullGraph.nodes.group[FullGraph.links.target[j]] == type)){
           
           //alert("Aggiungo");
           //alert(FullGraph.links[j]);
-          toAddNodes.push(JSON.parse(JSON.stringify(FullGraph.nodes[FullGraph.links[j].target])));
+          nameNodeToAdd = FullGraph.nodes.name[FullGraph.links.target[j]];
+          groupNodeToAdd = FullGraph.nodes.group[FullGraph.links.target[j]];
+          toParse = '{"name":"' +nameNodeToAdd+ '", "group":' + groupNodeToadd + '}';
+          toAddNodes.push(JSON.parse(toParse));
 
-          lin = JSON.parse(JSON.stringify(FullGraph.links[j]));
-          lin.source = graph.nodes.indexOf(d);
-          lin.target = IndNodes;
+          source = graph.nodes.indexOf(d);
+          target = IndNodes;
+          value = FullGraph.links.value[j];  
+          forparser = '{"source":' + source + ', "target":' + target + ', "value":' + value + '}';      
+          lin = JSON.parse(forparser);
           IndNodes++;
           toAddLink.push(lin);
         }
@@ -402,6 +413,7 @@ HTMLWidgets.widget({
       toremove = openedNode[d.name];
       //alert(toremove.length);
 
+      //NON DOVREBBE ESSERE CON LE PARANTESI QUADRE?
       toremove.forEach(function(link) {
 
           graph.nodes.splice(graph.nodes.indexOf(link.target),1);
@@ -423,7 +435,8 @@ HTMLWidgets.widget({
 
       //alert("Lunghezza link prima restart:"+ link.data().length);
       //alert("Lunghezza node prima restart:"+ node.data().length);
-
+      //link = svg.selectAll(".link")
+                        //.data(graph.links)
       link = link.data(graph.links);
 
       link.enter()
@@ -567,19 +580,21 @@ HTMLWidgets.widget({
 
     }
 
-    function countDegree(d,type){
+    function countDegree(d,type){//OK
+    //alert("in countDegree"); OK
 
-      for(i =0; i<FullGraph.nodes.length; ++i){
+      for(i =0; i<FullGraph.nodes.name.length; ++i){
 
-          if(FullGraph.nodes[i].name == d.name){
+          if(FullGraph.nodes.name[i] == d.name){
             index=i;
+            //alert("found " + d.name + " at index " + i); OK
             break;
           }
       }
       degree =0;
-      for(j=0; j<FullGraph.links.length; ++j){
+      for(j=0; j<FullGraph.links.source.length; ++j){
 
-        if ((FullGraph.links[j].source == index) && (FullGraph.nodes[FullGraph.links[j].target].group == type))
+        if ((FullGraph.links.source[j] == index) && (FullGraph.nodes.group[FullGraph.links.target[j]] == type))
           degree++;
       }
 
