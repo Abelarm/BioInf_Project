@@ -42,15 +42,15 @@ HTMLWidgets.widget({
     var color = d3.scale.category20();
     
     var svg = d3.select(el).select("svg");    
-    var width = svg.style("width");
-    var height = svg.style("height");
+    var width = el.offsetWidth;
+    var height = el.offsetHeight;
 
 
-    force
-        .charge(-400)
-        .linkDistance(50)
-        .friction(0.95)
-        .size([width, height]);
+    var force = d3.layout.force()
+    .charge(-400)
+    .linkDistance(50)
+    .friction(0.95)
+    .size([width, height]);
 
     var link,node,gnodes,FullGraph;
     var openedNode = {};
