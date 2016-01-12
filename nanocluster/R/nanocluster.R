@@ -2,7 +2,9 @@
 #' @export
 nanocluster <- function(json_path, height = NULL, width = NULL){
     x = jsonlite::fromJSON(json_path)
-    htmlwidgets::createWidget("nanocluster", x, width = width, height = height, htmlwidgets::sizingPolicy(padding = 10, browser.fill = TRUE), package = "nanocluster")
+    nodesR = x [[ 1 ]]
+    linksR = x [[ 2 ]]
+    htmlwidgets::createWidget("nanocluster", x = list(links = linksR, nodes = nodesR ), width = width, height = height, htmlwidgets::sizingPolicy(padding = 10, browser.fill = TRUE), package = "nanocluster")
 }
 
 # Binding for shiny

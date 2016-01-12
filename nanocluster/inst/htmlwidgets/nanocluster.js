@@ -234,7 +234,9 @@ HTMLWidgets.widget({
       });
 
       force.start();
-  }
+    });
+
+
 
       function addNodes(d){
         //console.log(d);
@@ -696,4 +698,5 @@ HTMLWidgets.widget({
           });
         };
       }
+    }
 });
