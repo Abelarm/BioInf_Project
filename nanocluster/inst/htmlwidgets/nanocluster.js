@@ -26,27 +26,38 @@ HTMLWidgets.widget({
 
   // Compute the node radius  using the javascript math expression specified
     function nodeSize(d) {
-            if(options.nodesize){
-                    return eval(options.radiusCalculation);
-
-            }else{
-                    return 6}
-
+                    return 6;
     }
 
 
     // alias options
-    var options = x.options;
-
+    var colourScale = d3.scale.category20();
+    var fontSize = 7;
+    var fontFamily = "serif";
+    var linkDistance = 50;
+    var linkWidth = function(d) {return Math.sqrt(d.value)};
+    var radiusCalculation = Math.sqrt(d.nodesize)+6;
+    var charge = -120;
+    var linkColour = "#666";
+    var opacity = 0.6;
+    var opacityNoHover = 0;
+    var height = NULL;
+    var width = NULL;
+    var zoom = FALSE;
+    var legend = FALSE;
+    var buonded = FALSE;
+    var clickAction = NULL;
+    var clickTextSize = fontSize * 2.5,
+    
     // convert links and nodes data frames to d3 friendly format
     var links = HTMLWidgets.dataframeToD3(x.links);
     var nodes = HTMLWidgets.dataframeToD3(x.nodes);
 
     // get the width and height
-    var width = el.offsetWidth;
-    var height = el.offsetHeight;
+    width = el.offsetWidth;
+    height = el.offsetHeight;
 
-    var color = eval(options.colourScale);
+    var color = colourScale;
 
     // set this up even if zoom = F
     var zoom = d3.behavior.zoom();
@@ -56,8 +67,8 @@ HTMLWidgets.widget({
       .nodes(d3.values(nodes))
       .links(links)
       .size([width, height])
-      .linkDistance(options.linkDistance)
-      .charge(options.charge)
+      .linkDistance(linkDistance)
+      .charge(charge)
       .on("tick", tick)
       .start();
 
@@ -104,15 +115,15 @@ HTMLWidgets.widget({
       .attr("class", "link")
       .style("stroke", function(d) { return d.colour ; })
       //.style("stroke", options.linkColour)
-      .style("opacity", options.opacity)
-      .style("stroke-width", eval("(" + options.linkWidth + ")"))
+      .style("opacity", opacity)
+      .style("stroke-width", eval("(" + linkWidth + ")"))
       .on("mouseover", function(d) {
           d3.select(this)
             .style("opacity", 1);
       })
       .on("mouseout", function(d) {
           d3.select(this)
-            .style("opacity", options.opacity);
+            .style("opacity", opacity);
       });
 
     // draw nodes
@@ -121,7 +132,7 @@ HTMLWidgets.widget({
       .enter().append("g")
       .attr("class", "node")
       .style("fill", function(d) { return color(d.group); })
-      .style("opacity", options.opacity)
+      .style("opacity", opacity)
       .on("mouseover", mouseover)
       .on("mouseout", mouseout)
       .on("click", click)
@@ -130,7 +141,7 @@ HTMLWidgets.widget({
     node.append("circle")
       .attr("r", function(d){return nodeSize(d);})
       .style("stroke", "#fff")
-      .style("opacity", options.opacity)
+      .style("opacity", opacity)
       .style("stroke-width", "1.5px");
 
     node.append("svg:text")
@@ -138,13 +149,13 @@ HTMLWidgets.widget({
       .attr("dx", 12)
       .attr("dy", ".35em")
       .text(function(d) { return d.name })
-      .style("font", options.fontSize + "px " + options.fontFamily)
-      .style("opacity", options.opacityNoHover)
+      .style("font", fontSize + "px " + fontFamily)
+      .style("opacity", opacityNoHover)
       .style("pointer-events", "none");
 
     function tick() {
       node.attr("transform", function(d) {
-        if(options.bounded){ // adds bounding box
+        if(bounded){ // adds bounding box
             d.x = Math.max(nodeSize(d), Math.min(width - nodeSize(d), d.x));
             d.y = Math.max(nodeSize(d), Math.min(height - nodeSize(d), d.y));
         }
@@ -166,7 +177,7 @@ HTMLWidgets.widget({
         .duration(750)
         .attr("x", 13)
         .style("stroke-width", ".5px")
-        .style("font", options.clickTextSize + "px ")
+        .style("font", clickTextSize + "px ")
         .style("opacity", 1);
     }
 
@@ -177,12 +188,12 @@ HTMLWidgets.widget({
       d3.select(this).select("text").transition()
         .duration(1250)
         .attr("x", 0)
-        .style("font", options.fontSize + "px ") 
-        .style("opacity", options.opacityNoHover);
+        .style("font", fontSize + "px ") 
+        .style("opacity", opacityNoHover);
     }
     
     function click(d) {
-      return eval(options.clickAction)
+      return eval(clickAction)
     }
 
     // add legend option
@@ -215,6 +226,6 @@ HTMLWidgets.widget({
     }
     
     // make font-family consistent across all elements
-    d3.select(el).selectAll('text').style('font-family', options.fontFamily);
+    d3.select(el).selectAll('text').style('font-family', fontFamily);
   },
 });
