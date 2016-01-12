@@ -55,10 +55,7 @@ HTMLWidgets.widget({
     var openedNode = {};
     var numChem=0,numDrug=0,numDise=0;
 
-    d3.json("nano_cluster.json", function(error, fullgraph) {
-      if (error) throw error;
-
-      FullGraph = fullgraph;
+      FullGraph = JSON.parse(JSON.stringify(x));;
       console.log(fullgraph);
       console.log("LEN FULL GRAPH LINKS: " + fullgraph.links.length)
 
@@ -237,9 +234,7 @@ HTMLWidgets.widget({
       });
 
       force.start();
-    });
-
-
+  }
 
       function addNodes(d){
         //console.log(d);
@@ -701,5 +696,4 @@ HTMLWidgets.widget({
           });
         };
       }
-    }
 });
