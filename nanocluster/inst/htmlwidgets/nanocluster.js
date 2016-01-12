@@ -36,18 +36,17 @@ HTMLWidgets.widget({
     var fontFamily = "serif";
     var linkDistance = 50;
     var linkWidth = function(d) {return Math.sqrt(d.value)};
-    var radiusCalculation = Math.sqrt(d.nodesize)+6;
     var charge = -120;
     var linkColour = "#666";
     var opacity = 0.6;
     var opacityNoHover = 0;
-    var height = NULL;
-    var width = NULL;
-    var zoom = FALSE;
-    var legend = FALSE;
-    var buonded = FALSE;
-    var clickAction = NULL;
-    var clickTextSize = fontSize * 2.5,
+    var height = null;
+    var width = null;
+    var zoom = false;
+    var legend = false;
+    var buonded = false;
+    var clickAction = null;
+    var clickTextSize = fontSize * 2.5;
     
     // convert links and nodes data frames to d3 friendly format
     var links = HTMLWidgets.dataframeToD3(x.links);
