@@ -284,7 +284,6 @@ HTMLWidgets.widget({
       dise.degree = disedegree;
       dise.dim = Math.floor(disedegree/6);
       //alert("Degree: "+disedegree + " Dim: " + dise.dim);
-
       graph.nodes.push(chem);
       
       //openedNode[d.name].push(chem);
@@ -316,7 +315,7 @@ HTMLWidgets.widget({
     }
 
     function addTrueNode(d,type){
-
+      // alert("Entrato nella funzione addTrueNode, chiamato da: " + d.name);
       fathers = Object.keys(openedNode);
 
       var father;
@@ -326,7 +325,6 @@ HTMLWidgets.widget({
         f = fathers[index];
 
         if (d.name == ("ChemOf"+f.name)){
-
           father = f;
           break;
 
@@ -345,8 +343,7 @@ HTMLWidgets.widget({
             }
           }
       }
-
-      
+      openedNode[d.name] = [];
 
       var index;
       for(i =0; i<FullGraph.nodes.name.length; ++i){
@@ -354,13 +351,12 @@ HTMLWidgets.widget({
           //alert(father);
           //alert(FullGraph.nodes[i].name);
           //alert(FullGraph.nodes[i].name == father);
-          if(FullGraph.nodes.name[i] == father){
+          if(FullGraph.nodes.name[i].indexOf(father) == 0){
             index=i;
             break;
           }
       }
 
-      //alert("Father: " +father);
       //alert("index of father: " + index);
 
       toAddLink = [];
@@ -375,16 +371,18 @@ HTMLWidgets.widget({
         if ((FullGraph.links.source[j] == index) && (FullGraph.nodes.group[FullGraph.links.target[j]] == type)){
           
           //alert("Aggiungo");
-          //alert(FullGraph.links[j]);
+          //alert(FullGraph.links.source[j] + " " + FullGraph.links.target[j]);
           nameNodeToAdd = FullGraph.nodes.name[FullGraph.links.target[j]];
           groupNodeToAdd = FullGraph.nodes.group[FullGraph.links.target[j]];
-          toParse = '{"name":"' +nameNodeToAdd+ '", "group":' + groupNodeToadd + '}';
+          toParse = '{"name":"' +nameNodeToAdd+ '", "group":' + groupNodeToAdd + '}';
           toAddNodes.push(JSON.parse(toParse));
 
           source = graph.nodes.indexOf(d);
+          //alert(source);
           target = IndNodes;
           value = FullGraph.links.value[j];  
-          forparser = '{"source":' + source + ', "target":' + target + ', "value":' + value + '}';      
+          forparser = '{"source":' + source + ', "target":' + target + ', "value":' + value + '}';
+          //alert(forparser);      
           lin = JSON.parse(forparser);
           IndNodes++;
           toAddLink.push(lin);
@@ -433,8 +431,9 @@ HTMLWidgets.widget({
 
     function restartAdd(){
 
-      //alert("Lunghezza link prima restart:"+ link.data().length);
-      //alert("Lunghezza node prima restart:"+ node.data().length);
+      // alert("Lunghezza link prima restart:"+ link.data().length);
+      // alert("Lunghezza node prima restart:"+ node.data().length);
+      // alert("stroke_width = " + stroke_width);
       //link = svg.selectAll(".link")
                         //.data(graph.links)
       link = link.data(graph.links);
@@ -451,6 +450,7 @@ HTMLWidgets.widget({
               .style("opacity", 0.5);
         })
         .style("opacity",0.5)
+        .style("stroke", "#000")
         .style("stroke-width", function(d) { return stroke_width; });
 
       //alert("Lunghezza link dopo restart:"+  link.data().length);
@@ -482,8 +482,7 @@ HTMLWidgets.widget({
           if (d.name.indexOf("ChemOf") > -1){
 
               if (!(d.name in openedNode) || openedNode[d.name] == 0){
-                //alert("Inserisco nodi di: "+ d.name);
-                openedNode[d.name] = [];
+                // alert("Inserisco nodi di: "+ d.name);
                 addTrueNode(d,4);
                 return;
               }else{
@@ -495,8 +494,7 @@ HTMLWidgets.widget({
           if (d.name.indexOf("PharOf") > -1){
 
               if (! (d.name in openedNode) || openedNode[d.name] == 0 ){
-                //alert("Inserisco nodi di: "+ d.name);
-                openedNode[d.name] = [];          
+                // alert("Inserisco nodi di: "+ d.name);
                 addTrueNode(d,3);
                 return;
               }else{
@@ -508,8 +506,7 @@ HTMLWidgets.widget({
           if (d.name.indexOf("DiseOf") > -1){
             
             if (! (d.name in openedNode) || openedNode[d.name] == 0 ){
-                //alert("Inserisco nodi di: "+ d.name);
-                openedNode[d.name] = [];
+                // alert("Inserisco nodi di: "+ d.name);
                 addTrueNode(d,2);
                 return;
               }else{
