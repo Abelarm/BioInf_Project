@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>Force Layout Example 1</title>
+    <style>
+
+.node {
+    fill: #ccc;
+    stroke: #fff;
+    stroke-width: 2px;
+}
+
+.gnode text {
+  pointer-events: none;
+  font: 20px sans-serif;
+}
+
+.link {
+    stroke: #777;
+    stroke-width: 2px;
+}
+
+#container{
+    width: 100%;
+    height: 100%;
+}
+
+    </style>
+</head>
+<body>
+<script src='d3.min.js'></script>
+<script type="text/javascript">
+
+var svg;
+var force, gnodes,nodes_data, links_data, graph;
+var links = "";
+var nodes = "";
+d3.json("nano.json",function(error, jgraph){
+    if (error) 
+        throw error;
+    graph=jgraph;
+});
+draw();
+
+function draw(nodes,links){
+    var width =  window.innerWidth,
+        height = window.innerHeight;
+
+    console.log(width+" "+height)
+
+    nodes_data = [
+        { name: "Nano", x:   width/3, y: height/3, group: 1, Ncolor:"pink"},
+        { name: "Chem", x: 2*width/3, y: height/3, group: 2, Ncolor:"aquamarine"},
+        { name: "Pharm", x: 2*width/3, y: 2*height/3, group: 3, Ncolor:"greenyellow"},
+        { name: "Dis", x: width/3, y: 2*height/3, group: 3, Ncolor:"yellow"}
+    ];
+
+    links_data = [
+        { source: 0, target: 1 },
+        { source: 0, target: 2 },
+        { source: 0, target: 3 },
+        { source: 1, target: 2 },
+        { source: 1, target: 3 },
+        { source: 2, target: 3 }
+    ];
+
+    svg = d3.select('body').append('svg')
+        .attr('id','container')
+        .attr('width', width)
+        .attr('height', height);
+
+    //add this for positioning the svg
+    //.attr('style','display:block;margin-left:auto; margin-top:auto');
+
+
+    force = d3.layout.force()
+        .size([width, height])
+        .nodes(nodes_data)
+        .links(links_data)
+        .linkDistance(width/2);
+
+    links = svg.selectAll('.link')
+        .data(links_data)
+        .enter().append('line')
+        .attr('class', 'link');
+
+    console.log(links);
+
+    var gnodes = svg.selectAll('g.gnode')
+      .data(nodes_data)
+      .enter()
+      .append('g')
+      .classed('gnode', true);
+
+    gnodes.on('mouseover',function(d){
+
+        var g = d3.select(this);
+          var info = g.append('text')
+            .attr("dy", "-1.50em")
+            .attr("dx","1.75em")
+            .text(function(d) { return d.name; })
+            .style("fill",function(d) { return d3.rgb(d.Ncolor); });
+
+        d3.select(this).select("text")
+        .attr("x", function (d) {
+            return d.x;
+        })
+            .attr("y", function (d) {
+            return d.y;
+        });
+
+    });
+
+    gnodes.on("mouseout", function() {
+          // Remove the info text on mouse out.
+          d3.select(this).select('text').remove();
+      });
+        
+    gnodes.on("click",function(d){
+            run(d);
+        });
+
+    // Add one circle in each group
+    var nodes = gnodes.append("circle")
+      .attr("class", "node")
+      .style("fill", function(d) { 
+            console.log(d.Ncolor);
+            return d3.rgb(d.Ncolor); })
+      .attr('class', 'node');
+
+    force.on('end', function() {
+
+        nodes.attr('r', width/35)
+            .attr('cx', function(d) { return d.x; })
+            .attr('cy', function(d) { return d.y; });
+
+        links.attr('x1', function(d) { return d.source.x; })
+            .attr('y1', function(d) { return d.source.y; })
+            .attr('x2', function(d) { return d.target.x; })
+            .attr('y2', function(d) { return d.target.y; });
+
+    });
+
+
+    force.start();
+    force.stop();
+}
+
+function run(d){
+
+    console.log(nodes);
+    console.log(nodes_data);
+    console.log(links);
+    console.log(links_data);
+
+    console.log("Cliccato:");
+    console.log(d);
+
+    LinksToAdd=[];
+    NodesToAdd=[];
+
+    for (var i = 0; i < graph.links.length; i++) {
+        if ((graph.nodes[graph.links[i].target].group == d.group) && (graph.nodes[graph.links[i].source].group == d.group) ){
+            
+            graph.nodes.push(JSON.parse(JSON.stringify(graph.nodes[graph.links[i].source])));
+            graph.nodes.push(JSON.parse(JSON.stringify(graph.nodes[graph.links[i].target])));
+            
+            lin = '{ "source":' + graph.nodes.length-2 + '"target":' + graph.nodes.length-1 + '"value":' + graph.links[i].value + '}'
+            graph.links.push(JSON.parse(lin));
+      }
+    }
+
+    restartAdd();
+}
+
+function restartAdd(){
+
+    console.log("Lunghezza link prima restart:"+ links_data.length);
+    console.log("Lunghezza node prima restart:"+ nodes_data.length);
+
+    console.log(nodes);
+    console.log(nodes_data);
+    console.log(links);
+    console.log(links_data);
+
+    links_data = links.data(graph.links);
+
+    links.enter()
+      .insert("line", "g.gnode")
+      .attr("class", "link")
+      .style("opacity",0.5)
+      .style("stroke-width", function(d) { return stroke_width; });
+
+    console.log("Lunghezza link dopo restart:"+  link.data().length);
+    gnodes = gnodes.data(graph.nodes);
+
+    var wrongnode =gnodes.enter()
+      .append("g")
+        .classed('gnode', true)
+      .append("circle")
+        .attr("class", "node")
+        .attr("r", function(d){
+          return 6;
+        })
+      .style("fill", function(d) { 
+        return color(d.group); 
+      });
+  
+   for (i = 0; i < wrongnode[0].length; i++) {
+      nd = wrongnode[0][i];
+      if(!!nd){
+        nodes_data[0].push(nd);
+      }
+   }
+    /*
+      console.log("Gnode");
+      console.log(gnodes);
+      console.log("gnodes_data")
+      console.log(gnodes.data());
+      console.log("node");
+      console.log(node);
+      console.log("node_data");
+      console.log(node.data());)
+    */
+    console.log("Lunghezza node dopo restart:"+ node.data().length);
+    force.stop();
+    force.start();
+  }
+
+</script>
