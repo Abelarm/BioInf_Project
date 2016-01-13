@@ -345,47 +345,48 @@ HTMLWidgets.widget({
     function addTrueNode(d,type){
       // alert("Entrato nella funzione addTrueNode, chiamato da: " + d.name);
       fathers = Object.keys(openedNode);
-
+      // alert(JSON.stringify(fathers));
       var father;
 
       for(index = 0; index < fathers.length; ++index){
 
         f = fathers[index];
-
-        if (d.name == ("ChemOf"+f.name)){
+        fullname = "PharOf" + f;
+        // alert(fullname);
+        // alert(d.name.indexOf("DiseOf"+f));
+        // alert(d.name.indexOf("ChemOf"+f));
+        // alert(d.name.indexOf("PharOf"+f));
+        if (d.name.indexOf("ChemOf"+f) == 0){
           father = f;
+          // alert(father);
           break;
 
-        }else{
+        }
+        if(d.name.indexOf("DiseOf"+f) == 0){
+          father = f;
+          // alert(father);
+          break;
+        }
+        if(d.name.indexOf("PharOf"+f) == 0){
+          father = f;
+          // alert(father);
+          break;
+        }
           
-          if (d.name == ("PharOf"+f.name)){
-
-            father = f;
-            break;
-
-          }else{
-
-            father = f;
-            break;
-
-            }
-          }
       }
       openedNode[d.name] = [];
+      // alert(father);
 
       var index;
       for(i =0; i<FullGraph.nodes.name.length; ++i){
 
-          //alert(father);
-          //alert(FullGraph.nodes[i].name);
-          //alert(FullGraph.nodes[i].name == father);
           if(FullGraph.nodes.name[i].indexOf(father) == 0){
             index=i;
             break;
           }
       }
 
-      //alert("index of father: " + index);
+      // alert("index of father: " + index);
 
       toAddLink = [];
       toAddNodes = [];
@@ -417,10 +418,10 @@ HTMLWidgets.widget({
         }
       }
 
-      //alert("---------------NUMERO NODI: " + numlin);
+      // alert("---------------NUMERO NODI: " + numlin);
 
-      //alert(toAddLink.length);
-      //alert(toAddNodes.length);
+      // alert(toAddLink.length);
+      // alert(toAddNodes.length);
 
       openedNode[d.name].push.apply(openedNode[d.name],toAddLink);
 
