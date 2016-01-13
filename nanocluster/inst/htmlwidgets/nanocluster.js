@@ -185,7 +185,7 @@ HTMLWidgets.widget({
         .attr("class","node")
         .attr("r", maxdim)
         .style("fill", function(d) { return color(d.group); })
-        .on("dblclick", function(d){
+        .on("click", function(d){
           if (! (d.name in openedNode)){
                   openedNode[d.name] = [];
                   addNodes(d);
@@ -501,7 +501,7 @@ HTMLWidgets.widget({
           //alert(d);
           return color(d.group); 
         })
-        .on("dblclick",function(d){
+        .on("click",function(d){
 
           //alert("clicked "+ d.name);
           //alert("openedNode " + openedNode[d.name]);
