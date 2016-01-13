@@ -101,6 +101,8 @@ HTMLWidgets.widget({
     graph.links = linki;
     
     //BEGIN RENDERING
+    
+    var zoom = d3.behavior.zoom();
 
     
     force
@@ -113,6 +115,32 @@ HTMLWidgets.widget({
       .on("tick", tickfunction)
       .on("end", endfunction)
       .start();
+      
+    var drag = force.drag()
+        .on("dragstart", dragstart)
+      // allow force drag to work with pan/zoom drag
+      function dragstart(d) {
+        d3.event.sourceEvent.preventDefault();
+        d3.event.sourceEvent.stopPropagation();
+      }
+      
+     svg = svg
+        .append("g").attr("class","zoom-layer")
+        .append("g")
+      
+    function redraw() {
+      d3.select(el).select(".zoom-layer").attr("transform",
+        "translate(" + d3.event.translate + ")"+
+        " scale(" + d3.event.scale + ")");
+    }
+    
+    zoom.on("zoom", redraw);
+
+    d3.select(el).select("svg")
+      .attr("pointer-events", "all")
+      .call(zoom);
+
+    
     
 
     //draw links
@@ -411,7 +439,6 @@ HTMLWidgets.widget({
       toremove = openedNode[d.name];
       //alert(toremove.length);
 
-      //NON DOVREBBE ESSERE CON LE PARANTESI QUADRE?
       toremove.forEach(function(link) {
 
           graph.nodes.splice(graph.nodes.indexOf(link.target),1);
