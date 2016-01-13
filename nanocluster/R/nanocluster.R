@@ -10,9 +10,12 @@ nanocluster <- function(Links,
                         Group,
                         height = NULL,
                         width = NULL,
+                        colourScale = JS("d3.scale.category20()"),
                         fontSize = 7,
                         fontFamily = "serif",
                         linkDistance = 50,
+                        linkWidth = JS("function(d) { return Math.sqrt(d.value); }"),
+                        radiusCalculation = JS(" Math.sqrt(d.nodesize)+6"),
                         charge = -120,
                         linkColour = "#666",
                         opacity = 0.6,
@@ -22,6 +25,9 @@ nanocluster <- function(Links,
                         opacityNoHover = 0,
                         clickAction = NULL)
 {
+  colourScale <- as.character(colourScale)
+  linkWidth <- as.character(linkWidth)
+  radiusCalculation <- as.character(radiusCalculation)
   # Subset data frames for network graph
   if (!is.data.frame(Links)) {
     stop("Links must be a data frame class object.")
@@ -51,21 +57,24 @@ nanocluster <- function(Links,
   
   # create options
   options = list(
-    NodeID = NodeID,
-    Group = Group,
-    fontSize = fontSize,
-    fontFamily = fontFamily,
-    clickTextSize = fontSize * 2.5,
-    linkDistance = linkDistance,
-    charge = charge,
-    # linkColour = linkColour,
-    opacity = opacity,
-    zoom = zoom,
-    legend = legend,
-    nodesize = nodesize,
-    bounded = bounded,
-    opacityNoHover = opacityNoHover,
-    clickAction = clickAction
+        NodeID = NodeID,
+        Group = Group,
+        colourScale = colourScale,
+        fontSize = fontSize,
+        fontFamily = fontFamily,
+        clickTextSize = fontSize * 2.5,
+        linkDistance = linkDistance,
+        linkWidth = linkWidth,
+        charge = charge,
+        # linkColour = linkColour,
+        opacity = opacity,
+        zoom = zoom,
+        legend = legend,
+        nodesize = nodesize,
+        radiusCalculation = radiusCalculation,
+        bounded = bounded,
+        opacityNoHover = opacityNoHover,
+        clickAction = clickAction
   )
   
   # create widget

@@ -27,7 +27,7 @@ HTMLWidgets.widget({
   
     var options = x.options;
     
-    alert(JSON.stringify(options));
+    //alert(JSON.stringify(options));
 
     // convert links and nodes data frames to d3 friendly format
     var imported_links = HTMLWidgets.dataframeToD3(x.links);
@@ -47,7 +47,7 @@ HTMLWidgets.widget({
 
     var force = force;
     
-    var color = d3.scale.category20();
+    var color = eval(options.colourScale);
     
     var svg = d3.select(el).select("svg");    
     var width = el.offsetWidth;
@@ -129,18 +129,24 @@ HTMLWidgets.widget({
      svg = svg
         .append("g").attr("class","zoom-layer")
         .append("g")
+        
+    // add zooming if requested
+    if (options.zoom) {
+      function redraw() {
+        d3.select(el).select(".zoom-layer").attr("transform",
+          "translate(" + d3.event.translate + ")"+
+          " scale(" + d3.event.scale + ")");
+      }
       
-    function redraw() {
-      d3.select(el).select(".zoom-layer").attr("transform",
-        "translate(" + d3.event.translate + ")"+
-        " scale(" + d3.event.scale + ")");
-    }
-    
-    zoom.on("zoom", redraw);
-
-    d3.select(el).select("svg")
+      zoom.on("zoom", redraw);
+      d3.select(el).select("svg")
       .attr("pointer-events", "all")
       .call(zoom);
+    }
+    else {
+      zoom.on("zoom", null);
+    }
+
 
     
     
