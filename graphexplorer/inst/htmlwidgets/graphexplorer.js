@@ -50,8 +50,6 @@ HTMLWidgets.widget({
     var color = eval(options.colourScale);
     
     var svg = d3.select(el).select("svg");    
-    var width = el.offsetWidth;
-    var height = el.offsetHeight;
 
     var link,node,gnodes;
     var openedNode = {};
@@ -59,33 +57,30 @@ HTMLWidgets.widget({
 
     graph = JSON.parse('{"nodes":[], "links":[]}');
     
-    nod_len = imported_nodes.length;
-    for (index = 0; index < nod_len; ++index) {
-      nd = imported_nodes[index];
-      if (nd.group==1){
-        graph.nodes.push(nd);
-      }else{
-        if(nd.group==2){
-          numDise++;
-        }else{
-          if(nd.group==3){
-            numDrug++;
-          }else{
-            numChem++;
-          }
-        }
-      }
-    }
-
-    for (var i = 0; i < imported_links.length; i++) {
-      ln = imported_links[i];
-      if((ln.source<=28) && ((ln.target<=28))){
-        graph.links.push(ln);
-        //alert("from imported: source: " + ln.source + " target: " + ln.target);
-        //alert("from pushed: source: " + graph.links[i].source + " target: " + graph.links[i].target);
-      }
-    }
+    var nodeDrug = JSON.parse('{"name":"drugs","group":1}');
+    var nodeChem = JSON.parse('{"name":"chem","group":2}');
+    var nodeDise = JSON.parse('{"name":"dise","group":3}');
+    var nodeNano = JSON.parse('{"name":"nano","group":4}');
     
+    //idea:aumentare tutti i source ed i target del dataset di 4 cosi' da non avere problemi
+    var link1 = JSON.parse('{"source": 0, "target":1, "value":1}');
+    var link2 = JSON.parse('{"source": 0, "target":2, "value":1}');
+    var link3 = JSON.parse('{"source": 0, "target":3, "value":1}');
+    var link4 = JSON.parse('{"source": 1, "target":2, "value":1}');
+    var link5 = JSON.parse('{"source": 1, "target":3, "value":1}');
+    var link6 = JSON.parse('{"source": 2, "target":3, "value":1}');
+
+    graph.nodes.push(nodeDrug);
+    graph.nodes.push(nodeChem);
+    graph.nodes.push(nodeDise);
+    graph.nodes.push(nodeNano);
+
+    graph.links.push(link1);
+    graph.links.push(link2);
+    graph.links.push(link3);
+    graph.links.push(link4);
+    graph.links.push(link5);
+    graph.links.push(link6);
     // alert(numDrug);
     // alert(numChem);
     // alert(numDise);
