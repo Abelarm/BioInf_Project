@@ -24,50 +24,51 @@ HTMLWidgets.widget({
   },
 
   renderValue: function(el, x, force) {
+  
+    var options = x.options;
+    
+    alert(JSON.stringify(options));
+
+    // convert links and nodes data frames to d3 friendly format
+    var imported_links = HTMLWidgets.dataframeToD3(x.links);
+    var imported_nodes = HTMLWidgets.dataframeToD3(x.nodes);
+    
+    //alert("links: " + JSON.stringify(imported_links));
+    //alert("nodes: " + JSON.stringify(imported_nodes));
+
+    // get the width and height
+    var width = el.offsetWidth;
+    var height = el.offsetHeight;
 
     var maxdim = 20;
     var defaultdim = 5;
     var stroke_width = 2;
     var padding = 2;
 
-    var options = {};
     var force = force;
     
-    options['fontSize'] = 20;
-    options['fontFamily'] = "serif";
-    options['opacityNoHover'] = 0;
-    options['clickTextSize'] = 25;
-
     var color = d3.scale.category20();
     
     var svg = d3.select(el).select("svg");    
     var width = el.offsetWidth;
     var height = el.offsetHeight;
 
-    var link,node,gnodes,FullGraph;
+    var link,node,gnodes;
     var openedNode = {};
     var numChem=0,numDrug=0,numDise=0;
-    
-    FullGraph = JSON.parse(JSON.stringify(x));;
 
     graph = JSON.parse('{"nodes":[], "links":[]}');
-
-    nodi = [];
-    linki = [];
     
-    nod_len = FullGraph.nodes.name.length;
+    nod_len = imported_nodes.length;
     for (index = 0; index < nod_len; ++index) {
-      nd = FullGraph.nodes.name[index];
-      group = FullGraph.nodes.group[index];
-      if (group==1){
-        forparser = '{"name":"' +nd+ '", "group":' + group + '}';
-        newnd = JSON.parse(forparser);
-        nodi.push(newnd);
+      nd = imported_nodes[index];
+      if (nd.group==1){
+        graph.nodes.push(nd);
       }else{
-        if(group==2){
+        if(nd.group==2){
           numDise++;
         }else{
-          if(group==3){
+          if(nd.group==3){
             numDrug++;
           }else{
             numChem++;
@@ -76,16 +77,14 @@ HTMLWidgets.widget({
       }
     }
 
-    for (var i = 0; i < FullGraph.links.source.length; i++) {
-      source = FullGraph.links.source[i];
-      target = FullGraph.links.target[i];
-      value = FullGraph.links.value[i];
-      if((source<=28) && ((target<=28))){
-        forparser = '{"source":' + source + ', "target":' + target + ', "value":' + value + '}';
-        ln = JSON.parse(forparser);
-        linki.push(ln);
+    for (var i = 0; i < imported_links.length; i++) {
+      ln = imported_links[i];
+      if((ln.source<=28) && ((ln.target<=28))){
+        graph.links.push(ln);
+        //alert("from imported: source: " + ln.source + " target: " + ln.target);
+        //alert("from pushed: source: " + graph.links[i].source + " target: " + graph.links[i].target);
       }
-    };
+    }
     
     // alert(numDrug);
     // alert(numChem);
@@ -97,8 +96,11 @@ HTMLWidgets.widget({
     
     
 
-    graph.nodes = nodi;
-    graph.links = linki;
+    //graph.nodes = nodi;
+    //graph.links = linki;
+    
+    //alert("graph.links " + JSON.stringify(graph.links));
+    //alert("graph.nodes " + JSON.stringify(graph.nodes));
     
     //BEGIN RENDERING
     
@@ -108,8 +110,8 @@ HTMLWidgets.widget({
     force
       .nodes(graph.nodes)
       .links(graph.links)
-      .charge(-400)
-      .linkDistance(50)
+      .charge(options.charge)
+      .linkDistance(options.linkDistance)
       .friction(0.95)
       .size([width, height])
       .on("tick", tickfunction)
@@ -151,13 +153,13 @@ HTMLWidgets.widget({
         .attr("class", "link")
         .on("mouseover", function(d) {
             d3.select(this)
-              .style("opacity", 1);
+              .style("opacity", options.opacity);
         })
         .on("mouseout", function(d) {
             d3.select(this)
-              .style("opacity", 0.5);
+              .style("opacity", options.opacity/2);
         })
-        .style("opacity",0.5)
+        .style("opacity",options.opacity/2)
         .style("stroke-width", function(d) { return Math.abs(d.value); })
         .style("stroke",function(d){
           if(d.value>0){
@@ -186,6 +188,7 @@ HTMLWidgets.widget({
         .attr("r", maxdim)
         .style("fill", function(d) { return color(d.group); })
         .on("click", function(d){
+          //alert("Ho cliccato " + d.name + " vaffanculo Dario Greco");
           if (! (d.name in openedNode)){
                   openedNode[d.name] = [];
                   addNodes(d);
@@ -322,15 +325,15 @@ HTMLWidgets.widget({
       //openedNode[d.name].push(dise);
     
       //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(chem));
-      lin1 = JSON.parse('{"source":' +  nodi.indexOf(d) + ', "target": ' + nodi.indexOf(chem) + ', "value": 1}');
+      lin1 = JSON.parse('{"source":' +  graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(chem) + ', "value": 1}');
       graph.links.push(lin1);
       openedNode[d.name].push(lin1);
       //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(phar));
-      lin2 = JSON.parse('{"source":' + nodi.indexOf(d)+ ', "target": ' + nodi.indexOf(phar) + ', "value": 1}');
+      lin2 = JSON.parse('{"source":' + graph.nodes.indexOf(d)+ ', "target": ' + graph.nodes.indexOf(phar) + ', "value": 1}');
       graph.links.push(lin2);
       openedNode[d.name].push(lin2);
       //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(dise));
-      lin3 = JSON.parse('{"source":' + nodi.indexOf(d) + ', "target": ' + nodi.indexOf(dise) + ', "value": 1}');
+      lin3 = JSON.parse('{"source":' + graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(dise) + ', "value": 1}');
       graph.links.push(lin3);
       openedNode[d.name].push(lin3);
       
@@ -378,9 +381,9 @@ HTMLWidgets.widget({
       // alert(father);
 
       var index;
-      for(i =0; i<FullGraph.nodes.name.length; ++i){
+      for(i =0; i<imported_nodes.length; ++i){
 
-          if(FullGraph.nodes.name[i].indexOf(father) == 0){
+          if(imported_nodes[i].name.indexOf(father) == 0){
             index=i;
             break;
           }
@@ -394,22 +397,22 @@ HTMLWidgets.widget({
       //alert("LEN FULL GRAPH LINKS: " + FullGraph.links.source.length)
 
       var numlin = 0;
-      for(j=0; j<FullGraph.links.source.length; ++j){
+      for(j=0; j<imported_links.length; ++j){
 
 
-        if ((FullGraph.links.source[j] == index) && (FullGraph.nodes.group[FullGraph.links.target[j]] == type)){
+        if ((imported_links[j].source == index) && (imported_nodes[imported_links[j].target].group == type)){
           
           //alert("Aggiungo");
           //alert(FullGraph.links.source[j] + " " + FullGraph.links.target[j]);
-          nameNodeToAdd = FullGraph.nodes.name[FullGraph.links.target[j]];
-          groupNodeToAdd = FullGraph.nodes.group[FullGraph.links.target[j]];
+          nameNodeToAdd = imported_nodes[imported_links[j].target].name;
+          groupNodeToAdd = imported_nodes[imported_links[j].target].group;
           toParse = '{"name":"' +nameNodeToAdd+ '", "group":' + groupNodeToAdd + '}';
           toAddNodes.push(JSON.parse(toParse));
 
           source = graph.nodes.indexOf(d);
           //alert(source);
           target = IndNodes;
-          value = FullGraph.links.value[j];  
+          value = imported_links[j].value;  
           forparser = '{"source":' + source + ', "target":' + target + ', "value":' + value + '}';
           //alert(forparser);      
           lin = JSON.parse(forparser);
@@ -471,13 +474,13 @@ HTMLWidgets.widget({
         .attr("class", "link")
         .on("mouseover", function(d) {
             d3.select(this)
-              .style("opacity", 1);
+              .style("opacity", options.opacity);
         })
         .on("mouseout", function(d) {
             d3.select(this)
-              .style("opacity", 0.5);
+              .style("opacity", options.opacity / 2);
         })
-        .style("opacity",0.5)
+        .style("opacity", options.opacity / 2)
         .style("stroke", "#000")
         .style("stroke-width", function(d) { return stroke_width; });
 
@@ -608,18 +611,18 @@ HTMLWidgets.widget({
     function countDegree(d,type){//OK
     //alert("in countDegree"); OK
 
-      for(i =0; i<FullGraph.nodes.name.length; ++i){
+      for(i =0; i<imported_nodes.length; ++i){
 
-          if(FullGraph.nodes.name[i] == d.name){
+          if(imported_nodes[i].name == d.name){
             index=i;
             //alert("found " + d.name + " at index " + i); OK
             break;
           }
       }
       degree =0;
-      for(j=0; j<FullGraph.links.source.length; ++j){
+      for(j=0; j<imported_links.length; ++j){
 
-        if ((FullGraph.links.source[j] == index) && (FullGraph.nodes.group[FullGraph.links.target[j]] == type))
+        if ((imported_links[j].source == index) && (imported_nodes[imported_links[j].target].group == type))
           degree++;
       }
 
@@ -649,7 +652,7 @@ HTMLWidgets.widget({
             .attr("dx", 12)
             .attr("dy", ".35em")
         .style("z",2)
-        .style("opacity", 1)
+        .style("opacity", options.opacity)
         .style("pointer-events", "none")
         .style("font", options.clickTextSize + "px ")
         .attr("x", function (d) {
