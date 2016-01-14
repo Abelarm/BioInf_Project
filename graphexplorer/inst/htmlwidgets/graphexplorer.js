@@ -10,6 +10,31 @@ HTMLWidgets.widget({
     d3.select(el).append("svg")
         .attr("width", width)
         .attr("height", height);
+        
+    var opts = {lines: 13 // The number of lines to draw
+              , length: 28 // The length of each line
+              , width: 14 // The line thickness
+              , radius: 42 // The radius of the inner circle
+              , scale: 1 // Scales overall size of the spinner
+              , corners: 1 // Corner roundness (0..1)
+              , color: '#000' // #rgb or #rrggbb or array of colors
+              , opacity: 0.25 // Opacity of the lines
+              , rotate: 0 // The rotation offset
+              , direction: 1 // 1: clockwise, -1: counterclockwise
+              , speed: 1 // Rounds per second
+              , trail: 60 // Afterglow percentage
+              , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+              , zIndex: 2e9 // The z-index (defaults to 2000000000)
+              , className: 'spinner' // The CSS class to assign to the spinner
+              , top: '50%' // Top position relative to parent
+              , left: '50%' // Left position relative to parent
+              , shadow: false // Whether to render a shadow
+              , hwaccel: false // Whether to use hardware acceleration
+              , position: 'absolute' // Element positioning
+              }
+              
+    var target = el;
+    spinner = new Spinner(opts).spin(target);
 
     return d3.layout.force();
   },
@@ -33,6 +58,8 @@ HTMLWidgets.widget({
     var imported_links = HTMLWidgets.dataframeToD3(x.links);
     var imported_nodes = HTMLWidgets.dataframeToD3(x.nodes);
     
+    spinner.stop();
+    
     //alert("links: " + JSON.stringify(imported_links));
     //alert("nodes: " + JSON.stringify(imported_nodes));
 
@@ -47,9 +74,10 @@ HTMLWidgets.widget({
 
     var force = force;
 
-    var color = d3.scale.category20();
+    var color = eval(options.colourScale);
+    //alert(JSON.stringify(color));
 
-    var svg = d3.select(el).select("svg");    
+    var oldsvg = d3.select(el).select("svg");    
 
     var link,node,gnodes;
     var openedNode = {};
@@ -68,12 +96,12 @@ HTMLWidgets.widget({
     var link4 = JSON.parse('{"source": 1, "target":2, "value":1}');
     var link5 = JSON.parse('{"source": 1, "target":3, "value":1}');
     var link6 = JSON.parse('{"source": 2, "target":3, "value":1}');
-
+    
+    graph.nodes.push(nodeNano);
+    graph.nodes.push(nodeDise);
     graph.nodes.push(nodeDrug);
     graph.nodes.push(nodeChem);
-    graph.nodes.push(nodeDise);
-    graph.nodes.push(nodeNano);
-
+    
     graph.links.push(link1);
     graph.links.push(link2);
     graph.links.push(link3);
@@ -120,14 +148,14 @@ HTMLWidgets.widget({
         d3.event.sourceEvent.stopPropagation();
       }
       
+    var svg = oldsvg
+       .append("g").attr("class","zoom-layer")
+       .append("g") 
+      
      // select the svg element and remove existing children
-    var svg = d3.select(el).select("svg");
     svg.selectAll("*").remove();
       
-     svg = svg
-        .append("g").attr("class","zoom-layer")
-        .append("g")
-        
+ 
     // add zooming if requested
     if (options.zoom) {
       function redraw() {
@@ -186,6 +214,7 @@ HTMLWidgets.widget({
         .attr("class","node")
         .attr("r", defaultdim)
         .style("fill", function(d) { return color(d.group); })
+        .attr("group", function(d){return d.group;})
         .on("click", function(d){
           //alert("Ho cliccato " + d.name);
           if (! (d.name in openedNode)){
@@ -194,13 +223,57 @@ HTMLWidgets.widget({
                   return;
           }
           else{
-            alert("going to remove");
+            //alert("going to remove");
             removeNodes(d);
             return;
           }
         })
         .style("stroke", '#fff')
         .style("stroke-width", 1);
+        
+    // add legend option
+    if(options.legend){
+        var legendRectSize = 18;
+        var legendSpacing = 4;
+        var legend = oldsvg.selectAll('.legend')
+          .data(color.domain())
+          .enter()
+          .append('g')
+          .attr('class', 'legend')
+          .attr('transform', function(d, i) {
+            var height = legendRectSize + legendSpacing;
+            var offset =  height * color.domain().length / 2;
+            var horz = legendRectSize;
+            var vert = i * height+4;
+            return 'translate(' + horz + ',' + vert + ')';
+          });
+
+        legend.append('rect')
+          .attr('width', legendRectSize)
+          .attr('height', legendRectSize)
+          .style('fill', color)
+          .style('stroke', color);
+
+        legend.append('text')
+          .attr('x', legendRectSize + legendSpacing)
+          .attr('y', legendRectSize - legendSpacing)
+          .text(function(d) {
+           switch(d){
+             case 1:
+                return "Nano";
+                break;
+             case 2:
+                return "Disease";
+                break;
+             case 3:
+                return "Pharmaceutical";
+                break;
+             case 4:
+                return "Chemical";
+                break;
+           }
+           });
+    }
         
 
     //alert(gnodes);
@@ -284,96 +357,6 @@ HTMLWidgets.widget({
       //alert("Numero di nodi dopo l'add: " + graph.nodes.length);
       //alert("Numero di archi dopo l'add" + graph.links.length);
       restartAdd();
-    }
-
-    function addTrueNode(d,type){
-      // alert("Entrato nella funzione addTrueNode, chiamato da: " + d.name);
-      fathers = Object.keys(openedNode);
-      // alert(JSON.stringify(fathers));
-      var father;
-
-      for(index = 0; index < fathers.length; ++index){
-
-        f = fathers[index];
-        fullname = "PharOf" + f;
-        // alert(fullname);
-        // alert(d.name.indexOf("DiseOf"+f));
-        // alert(d.name.indexOf("ChemOf"+f));
-        // alert(d.name.indexOf("PharOf"+f));
-        if (d.name.indexOf("ChemOf"+f) == 0){
-          father = f;
-          // alert(father);
-          break;
-
-        }
-        if(d.name.indexOf("DiseOf"+f) == 0){
-          father = f;
-          // alert(father);
-          break;
-        }
-        if(d.name.indexOf("PharOf"+f) == 0){
-          father = f;
-          // alert(father);
-          break;
-        }
-          
-      }
-      openedNode[d.name] = [];
-      // alert(father);
-
-      var index;
-      for(i =0; i<imported_nodes.length; ++i){
-
-          if(imported_nodes[i].name.indexOf(father) == 0){
-            index=i;
-            break;
-          }
-      }
-
-      // alert("index of father: " + index);
-
-      toAddLink = [];
-      toAddNodes = [];
-      IndNodes = graph.nodes.length;
-      //alert("LEN FULL GRAPH LINKS: " + FullGraph.links.source.length)
-
-      var numlin = 0;
-      for(j=0; j<imported_links.length; ++j){
-
-
-        if ((imported_links[j].source == index) && (imported_nodes[imported_links[j].target].group == type)){
-          
-          //alert("Aggiungo");
-          //alert(FullGraph.links.source[j] + " " + FullGraph.links.target[j]);
-          nameNodeToAdd = imported_nodes[imported_links[j].target].name;
-          groupNodeToAdd = imported_nodes[imported_links[j].target].group;
-          toParse = '{"name":"' +nameNodeToAdd+ '", "group":' + groupNodeToAdd + '}';
-          toAddNodes.push(JSON.parse(toParse));
-
-          source = graph.nodes.indexOf(d);
-          //alert(source);
-          target = IndNodes;
-          value = imported_links[j].value;  
-          forparser = '{"source":' + source + ', "target":' + target + ', "value":' + value + '}';
-          //alert(forparser);      
-          lin = JSON.parse(forparser);
-          IndNodes++;
-          toAddLink.push(lin);
-        }
-      }
-
-      // alert("---------------NUMERO NODI: " + numlin);
-
-      // alert(toAddLink.length);
-      // alert(toAddNodes.length);
-
-      openedNode[d.name].push.apply(openedNode[d.name],toAddLink);
-
-      graph.nodes.push.apply(graph.nodes,toAddNodes);
-      graph.links.push.apply(graph.links,toAddLink);
-
-      restartAdd();
-
     }
 
     function removeNodes(d){
