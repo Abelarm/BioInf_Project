@@ -55,6 +55,7 @@ HTMLWidgets.widget({
 
     var link,node,gnodes;
     var openedNode = {};
+    var indexMap = {};
     var numChem=0,numDrug=0,numDise=0;
 
     graph = JSON.parse('{"nodes":[], "links":[]}');
@@ -63,6 +64,8 @@ HTMLWidgets.widget({
     for (index = 0; index < nod_len; ++index) {
       nd = imported_nodes[index];
       if (nd.group==1){
+        //alert("Sto aggiungendo: " + index);
+        indexMap[index] = graph.nodes.length; 
         graph.nodes.push(nd);
       }else{
         if(nd.group==2){
@@ -79,10 +82,14 @@ HTMLWidgets.widget({
 
     for (var i = 0; i < imported_links.length; i++) {
       ln = imported_links[i];
+      
       if((imported_nodes[ln.source].group == 1) && ((imported_nodes[ln.target].group == 1))){
-        graph.links.push(ln);
+        newln = JSON.parse(JSON.stringify(ln));
+        newln.source = indexMap[ln.source]; 
+        newln.target = indexMap[ln.target];
+        graph.links.push(newln);
         //alert("from imported: source: " + ln.source + " target: " + ln.target);
-        //alert("from pushed: source: " + graph.links[i].source + " target: " + graph.links[i].target);
+        //alert(" group source: " + imported_nodes[ln.source].group + "group target: " + imported_nodes[ln.target].group);
       }
     }
     
