@@ -46,9 +46,9 @@ HTMLWidgets.widget({
     var padding = 2;
 
     var force = force;
-    
-    var color = eval(options.colourScale);
-    
+
+    var color = d3.scale.category20();
+
     var svg = d3.select(el).select("svg");    
 
     var link,node,gnodes;
@@ -57,12 +57,11 @@ HTMLWidgets.widget({
 
     graph = JSON.parse('{"nodes":[], "links":[]}');
     
-    var nodeDrug = JSON.parse('{"name":"drugs","group":1}');
-    var nodeChem = JSON.parse('{"name":"chem","group":2}');
-    var nodeDise = JSON.parse('{"name":"dise","group":3}');
-    var nodeNano = JSON.parse('{"name":"nano","group":4}');
+    var nodeNano = JSON.parse('{"name":"nano","group":1}');
+    var nodeDise = JSON.parse('{"name":"dise","group":2}');
+    var nodeDrug = JSON.parse('{"name":"drugs","group":3}');
+    var nodeChem = JSON.parse('{"name":"chem","group":4}');
     
-    //idea:aumentare tutti i source ed i target del dataset di 4 cosi' da non avere problemi
     var link1 = JSON.parse('{"source": 0, "target":1, "value":1}');
     var link2 = JSON.parse('{"source": 0, "target":2, "value":1}');
     var link3 = JSON.parse('{"source": 0, "target":3, "value":1}');
@@ -141,10 +140,6 @@ HTMLWidgets.widget({
     else {
       zoom.on("zoom", null);
     }
-
-
-    
-    
 
     //draw links
     link = svg.selectAll(".link")
@@ -285,64 +280,38 @@ HTMLWidgets.widget({
       
       
       
-    function addNodes(d){ //ok!
-      //alert(JSON.stringify(d));
-
-      //d.append("Opened","True");
-      
-      //alert("Num Archi prima: " + graph.links.length);
-      
-      chem = JSON.parse(JSON.stringify(d));
-      chem.name = "ChemOf"+d.name;
-      chem.group = 4;
-      chemdegree = countDegree(d,chem.group);
-      chem.degree = chemdegree;
-      chem.dim = Math.floor(chemdegree/6);
-      //alert("Degree: "+chemdegree + " Dim: " + chem.dim);
-
-      phar = JSON.parse(JSON.stringify(d));
-      phar.name = "PharOf"+d.name;
-      phar.group = 3;
-      phardegree = countDegree(d,phar.group);
-      //alert("---------------------"+ (numDrug/phardegree));
-      phar.degree = phardegree;
-      phar.dim = Math.floor(phardegree/6);
-      //alert("Degree: " +phardegree + " Dim: " + phar.dim);
-
-      dise = JSON.parse(JSON.stringify(d));
-      dise.name = "DiseOf"+d.name;
-      dise.group = 2;
-      disedegree = countDegree(d,dise.group);
-      dise.degree = disedegree;
-      dise.dim = Math.floor(disedegree/6);
-      //alert("Degree: "+disedegree + " Dim: " + dise.dim);
-      graph.nodes.push(chem);
-      
-      //openedNode[d.name].push(chem);
-      graph.nodes.push(phar);
-      
-      //openedNode[d.name].push(phar);
-      graph.nodes.push(dise);
-      //openedNode[d.name].push(dise);
-    
-      //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(chem));
-      lin1 = JSON.parse('{"source":' +  graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(chem) + ', "value": 1}');
-      graph.links.push(lin1);
-      openedNode[d.name].push(lin1);
-      //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(phar));
-      lin2 = JSON.parse('{"source":' + graph.nodes.indexOf(d)+ ', "target": ' + graph.nodes.indexOf(phar) + ', "value": 1}');
-      graph.links.push(lin2);
-      openedNode[d.name].push(lin2);
-      //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(dise));
-      lin3 = JSON.parse('{"source":' + graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(dise) + ', "value": 1}');
-      graph.links.push(lin3);
-      openedNode[d.name].push(lin3);
-      
-      //alert("Num Archi dopo: " + graph.links.length);
-
-      //alert(graph.nodes);
-      //alert(graph.links);
-
+    function addNodes(d){ 
+      alert("Numero di nodi prima l'add: " + graph.nodes.length);
+      alert("Numero di archi prima l'add" + graph.links.length);
+      //probabilmente va portata fuori
+      alreadyAddedNodes = {};
+      for(i = 0; i < imported_links.length; i++){
+        ln = imported_links[i];
+        oldsource = imported_nodes[ln.source];
+        oldtarget = imported_nodes[ln.target];
+        //alert("oldsource.name = " + oldsource.name + "oldsource.group = " + oldsource.group + "oldtarget.name = " + oldtarget.name + " oldtarget.group = " + oldtarget.group);
+        if(oldsource.group == d.group && oldtarget.group == d.group){
+          //alert("dentro!")
+          //arco con due nodi da aggiungere
+          if(!(oldsource.name in alreadyAddedNodes)){
+            source = JSON.parse(JSON.stringify(oldsource));
+            graph.nodes.push(source);
+            alreadyAddedNodes[oldsource.name] = graph.nodes.indexOf(source);
+          }
+          if(!(oldtarget.name in alreadyAddedNodes)){
+            target = JSON.parse(JSON.stringify(oldtarget));
+            graph.nodes.push(target);
+            alreadyAddedNodes[oldtarget.name] = graph.nodes.indexOf(target);
+          }
+          addLn = JSON.parse(JSON.stringify(ln));
+          addLn.source = alreadyAddedNodes[oldsource.name];
+          addLn.target = alreadyAddedNodes[oldtarget.name];
+          graph.links.push(addLn);
+        }
+      }
+      alert("Finito di scorrere gli archi");  
+      alert("Numero di nodi dopo l'add: " + graph.nodes.length);
+      alert("Numero di archi dopo l'add" + graph.links.length);
       restartAdd();
     }
 
@@ -463,8 +432,8 @@ HTMLWidgets.widget({
 
     function restartAdd(){
 
-      // alert("Lunghezza link prima restart:"+ link.data().length);
-      // alert("Lunghezza node prima restart:"+ node.data().length);
+      alert("Lunghezza link prima restart:"+ link.data().length);
+      alert("Lunghezza node prima restart:"+ node.data().length);
       // alert("stroke_width = " + stroke_width);
       //link = svg.selectAll(".link")
                         //.data(graph.links)
@@ -485,7 +454,7 @@ HTMLWidgets.widget({
         .style("stroke", "#000")
         .style("stroke-width", function(d) { return stroke_width; });
 
-      //alert("Lunghezza link dopo restart:"+  link.data().length);
+      alert("Lunghezza link dopo restart:"+  link.data().length);
       gnodes = gnodes.data(graph.nodes);
 
       var wrongnode =gnodes.enter()
@@ -505,48 +474,6 @@ HTMLWidgets.widget({
         .style("fill", function(d) { 
           //alert(d);
           return color(d.group); 
-        })
-        .on("click",function(d){
-
-          //alert("clicked "+ d.name);
-          //alert("openedNode " + openedNode[d.name]);
-
-          if (d.name.indexOf("ChemOf") > -1){
-
-              if (!(d.name in openedNode) || openedNode[d.name] == 0){
-                // alert("Inserisco nodi di: "+ d.name);
-                addTrueNode(d,4);
-                return;
-              }else{
-                //alert("Rimuovo nodi di: "+ d.name);
-                removeNodes(d);
-                return;
-              }
-          }
-          if (d.name.indexOf("PharOf") > -1){
-
-              if (! (d.name in openedNode) || openedNode[d.name] == 0 ){
-                // alert("Inserisco nodi di: "+ d.name);
-                addTrueNode(d,3);
-                return;
-              }else{
-               //alert("Rimuovo nodi di: "+ d.name);
-                removeNodes(d);
-                return;
-              }
-          }
-          if (d.name.indexOf("DiseOf") > -1){
-            
-            if (! (d.name in openedNode) || openedNode[d.name] == 0 ){
-                // alert("Inserisco nodi di: "+ d.name);
-                addTrueNode(d,2);
-                return;
-              }else{
-                //alert("Rimuovo nodi di: "+ d.name);
-                removeNodes(d);
-                return;
-              }
-          }
         });
 
      for (i = 0; i < wrongnode[0].length; i++) {
@@ -565,7 +492,7 @@ HTMLWidgets.widget({
       //alert("node_data");
       //alert(node.data());
 
-      //alert("Lunghezza node dopo restart:"+ node.data().length);
+      alert("Lunghezza node dopo restart:"+ node.data().length);
       force.stop();
       force.start();
     }
