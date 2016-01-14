@@ -120,6 +120,10 @@ HTMLWidgets.widget({
         d3.event.sourceEvent.stopPropagation();
       }
       
+     // select the svg element and remove existing children
+    var svg = d3.select(el).select("svg");
+    svg.selectAll("*").remove();
+      
      svg = svg
         .append("g").attr("class","zoom-layer")
         .append("g")
@@ -171,7 +175,6 @@ HTMLWidgets.widget({
             .enter()
             .append('g')
             .classed('gnode', true)
-            .attr("dim",maxdim)
             .on("mouseover",mouseover)
             .on("mouseout",mouseout)
             .style("stroke",'#fff')
@@ -181,50 +184,17 @@ HTMLWidgets.widget({
     node = gnodes
         .append("circle")
         .attr("class","node")
-        .attr("r", maxdim)
+        .attr("r", defaultdim)
         .style("fill", function(d) { return color(d.group); })
         .on("click", function(d){
-          //alert("Ho cliccato " + d.name + " vaffanculo Dario Greco");
+          //alert("Ho cliccato " + d.name);
           if (! (d.name in openedNode)){
                   openedNode[d.name] = [];
                   addNodes(d);
                   return;
           }
           else{
-            if (("ChemOf"+d.name) in openedNode){
-              name = "ChemOf"+d.name;
-              for(i =0; i<graph.nodes.length; ++i){
-                if(graph.nodes[i].name = name){
-                  //alert("Rimuovo "+name);
-                  removeNodes(graph.nodes[i]);
-                  //alert("-------FATTO-------");
-                  break;
-                }
-              }
-
-            }
-            if (("PharOf"+d.name) in openedNode){
-              name = "PharOf"+d.name;
-              for(i =0; i<graph.nodes.length; ++i){
-                if(graph.nodes[i].name = name){
-                  //alert("Rimuovo "+name);
-                  removeNodes(graph.nodes[i]);
-                  //alert("-------FATTO-------");
-                  break;
-                }
-              }
-            }
-            if (("DiseOf"+d.name) in openedNode){
-              name = "DiseOf"+d.name;
-              for(i =0; i<graph.nodes.length; ++i){
-                if(graph.nodes[i].name = name){
-                  //alert("Rimuovo "+name);
-                  removeNodes(graph.nodes[i]);
-                  //alert("-------FATTO-------");
-                  break;
-                }
-              }
-            }
+            alert("going to remove");
             removeNodes(d);
             return;
           }
@@ -276,13 +246,13 @@ HTMLWidgets.widget({
           .attr("y2", function(d) { return d.target.y; });
 
     }
-      
-      
-      
-      
+       
     function addNodes(d){ 
-      alert("Numero di nodi prima l'add: " + graph.nodes.length);
-      alert("Numero di archi prima l'add" + graph.links.length);
+      if(!(d.name in openedNode)){
+        openedNode[d.name] = [];
+      }
+      //alert("Numero di nodi prima l'add: " + graph.nodes.length);
+      //alert("Numero di archi prima l'add" + graph.links.length);
       //probabilmente va portata fuori
       alreadyAddedNodes = {};
       for(i = 0; i < imported_links.length; i++){
@@ -307,11 +277,12 @@ HTMLWidgets.widget({
           addLn.source = alreadyAddedNodes[oldsource.name];
           addLn.target = alreadyAddedNodes[oldtarget.name];
           graph.links.push(addLn);
+          openedNode[d.name].push(addLn);
         }
       }
-      alert("Finito di scorrere gli archi");  
-      alert("Numero di nodi dopo l'add: " + graph.nodes.length);
-      alert("Numero di archi dopo l'add" + graph.links.length);
+      //alert("Finito di scorrere gli archi");  
+      //alert("Numero di nodi dopo l'add: " + graph.nodes.length);
+      //alert("Numero di archi dopo l'add" + graph.links.length);
       restartAdd();
     }
 
@@ -414,8 +385,14 @@ HTMLWidgets.widget({
       //alert(toremove.length);
 
       toremove.forEach(function(link) {
-
-          graph.nodes.splice(graph.nodes.indexOf(link.target),1);
+          indexOfSource = graph.nodes.indexOf(link.source);
+          indexOfTarget = graph.nodes.indexOf(link.target);
+          if(indexOfSource > 3){
+            graph.nodes.splice(indexOfSource,1);
+          }
+          if(indexOfTarget > 3){
+            graph.nodes.splice(indexOfTarget,1);
+          }
           graph.links.splice(graph.links.indexOf(link),1);
 
       });
@@ -432,8 +409,8 @@ HTMLWidgets.widget({
 
     function restartAdd(){
 
-      alert("Lunghezza link prima restart:"+ link.data().length);
-      alert("Lunghezza node prima restart:"+ node.data().length);
+      //alert("Lunghezza link prima restart:"+ link.data().length);
+      //alert("Lunghezza node prima restart:"+ node.data().length);
       // alert("stroke_width = " + stroke_width);
       //link = svg.selectAll(".link")
                         //.data(graph.links)
@@ -451,10 +428,16 @@ HTMLWidgets.widget({
               .style("opacity", options.opacity / 2);
         })
         .style("opacity", options.opacity / 2)
-        .style("stroke", "#000")
-        .style("stroke-width", function(d) { return stroke_width; });
+        .style("stroke", function(d){
+          if(d.value>0){
+            return "#008000";
+          }else{
+            return "#FF0000";
+          }
+        })
+        .style("stroke-width", function(d) { return Math.abs(d.value); });
 
-      alert("Lunghezza link dopo restart:"+  link.data().length);
+      //alert("Lunghezza link dopo restart:"+  link.data().length);
       gnodes = gnodes.data(graph.nodes);
 
       var wrongnode =gnodes.enter()
@@ -492,7 +475,7 @@ HTMLWidgets.widget({
       //alert("node_data");
       //alert(node.data());
 
-      alert("Lunghezza node dopo restart:"+ node.data().length);
+      //alert("Lunghezza node dopo restart:"+ node.data().length);
       force.stop();
       force.start();
     }
@@ -510,7 +493,7 @@ HTMLWidgets.widget({
       link.enter()
         .insert("line", ".node")
         .attr("class", "link")
-        .style("stroke-width", function(d) { return d.value; });
+        .style("stroke-width", function(d) { return Math.abs(d.value); });
 
       //alert("Lunghezza link dopo restart:"+  link.data().length);
       gnodes = gnodes.data(graph.nodes);
@@ -599,21 +582,7 @@ HTMLWidgets.widget({
         d3.select(this).select("circle").transition()
           .duration(750)
           .attr("r", function(d){
-            //alert(nodeSize(d));
-            if(d.group!=1){
-              if (d.name.indexOf("ChemOf") > -1){
-                  return nodeSize(d);
-              }
-              if (d.name.indexOf("PharOf") > -1){
-                  return nodeSize(d);
-              }
-              if (d.name.indexOf("DiseOf") > -1){
-                  return nodeSize(d);
-              }
-              return nodeSize(d)+5;
-            }else{
-              return nodeSize(d);
-            }
+            return nodeSize(d);
           });
         //alert(d3.select(this).select("text"));
         d3.select(this).select("text")
@@ -627,36 +596,10 @@ HTMLWidgets.widget({
 
     function nodeSize(d){
       //alert(d);
-      if ("dim" in d){
-        if (d.dim < maxdim){
-          if (d.dim < defaultdim){
-            return defaultdim+1;
-          }else{
-            return d.dim;
-          }
-        }else{
-          return (maxdim-2);
-        }
-      }else{
-        if (d.group==1){
-          return maxdim;
-        }else{
-          return defaultdim;
-        } 
-      }
+      return defaultdim;
     }
 
     function getText(d){
-      name = d.name;
-      if (d.name.indexOf("ChemOf") > -1){
-        return "Chemical ("+ ((d.degree*100)/numChem).toFixed(2) +"%)";
-      }
-      if (d.name.indexOf("PharOf") > -1){
-        return "Drug ("+ ((d.degree*100)/numDrug).toFixed(2) +"%)";
-      }
-      if (d.name.indexOf("DiseOf") > -1){
-        return "Disease ("+ ((d.degree*100)/numDise).toFixed(2) +"%)";
-      }
       return d.name;
     }
 
