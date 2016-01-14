@@ -75,24 +75,27 @@ ADJ_matrix = function(W_ADJ,input,output,nano,drugs,chemical,disease,chemMat,joi
   rownames(ADJ) = colnames(ADJ) = V(graph_gw)$name
   
   for(i in 1:nNano){
-    ADJ[i,cluster==i]=1
+    idx = which(cluster==i)
+    ADJ[i,idx]=1
+    ADJ[idx,i]=1
   }
   
   ADJ2 = ADJ * as.matrix(W_ADJ)
   ADJ2[1:nNano,1:nNano] = W_ADJ[1:nNano,1:nNano]
   
-  CQN = conditional_query_nodes(input,output,FALSE,nano,drugs,chemical,disease,chemMat,join10)
+  CQN = conditional_query_nodes(input,output,TRUE,nano,drugs,chemical,disease,chemMat,join10)
   selected_nodes = CQN$selected_nodes
   
   message("ADJ_matrix. selected_nodes: ",selected_nodes,"\n")
   
   if(length(selected_nodes)< nNodes){
-    neigh = colnames(ADJ)[ADJ[selected_nodes,]!=0]
-    sel_n = unique(c(selected_nodes,neigh)) 
-    message("sel_n: ",sel_n,"\n")
-    message("length(sel_n): ",length(sel_n),"\n")
-    
+    clustering_idx = unique(cluster[selected_nodes])
+    sel_n = names(cluster)[cluster %in% clustering_idx]
+    sel_n = unique(c(selected_nodes,sel_n)) 
     ADJ2 = ADJ2[sel_n,sel_n]
+    nano_selected = sel_n[sel_n %in% nano]
+    ADJ2[nano_selected,nano_selected] = W_ADJ[nano_selected,nano_selected]
+    
     message("dim(ADJ2) ",dim(ADJ2),"\n")
     
     g_clust = graph.adjacency(adjmatrix = ADJ2,mode = "undirected",weighted = TRUE)
@@ -101,10 +104,10 @@ ADJ_matrix = function(W_ADJ,input,output,nano,drugs,chemical,disease,chemMat,joi
     idx_c = which(colnames(ADJ2) %in% chemical)
     idx_di = which(colnames(ADJ2) %in% disease)
     
-    V(g_clust)$type = rep("nano",dim(ADJ2)[1])
-    V(g_clust)$type[idx_dr] ="drug"
-    V(g_clust)$type[idx_c] ="chemical"
-    V(g_clust)$type[idx_di] ="disease"
+    V(g_clust)$type = rep("1",dim(ADJ2)[1])
+    V(g_clust)$type[idx_dr] ="3"
+    V(g_clust)$type[idx_c] ="4"
+    V(g_clust)$type[idx_di] ="2"
     
     message("V(g_clust)$type  ",V(g_clust)$type ,"\n")
     return(list(ADJ2=ADJ2,g_clust=g_clust))
