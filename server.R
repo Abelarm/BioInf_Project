@@ -1,6 +1,6 @@
 library(shiny)
 library(nanocluster)
-setwd("/home/neuronelab/BioInf_Project/")
+setwd("~/BioInf_Project/")
 
 shinyServer(function(input, output) {
   DEBUGGING = TRUE

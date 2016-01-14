@@ -126,7 +126,13 @@ HTMLWidgets.widget({
         d3.event.sourceEvent.stopPropagation();
       }
       
-     svg = svg
+      
+    // select the svg element and remove existing children
+    // Needed, otherwise when redrawed with Shiny the old graph isn't eliminated
+    var svg = d3.select(el).select("svg");
+    svg.selectAll("*").remove();
+    
+    svg = svg
         .append("g").attr("class","zoom-layer")
         .append("g")
         
