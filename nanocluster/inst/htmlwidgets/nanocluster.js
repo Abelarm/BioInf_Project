@@ -49,7 +49,7 @@ HTMLWidgets.widget({
     
     var color = eval(options.colourScale);
     
-    var svg = d3.select(el).select("svg");    
+    var oldsvg = d3.select(el).select("svg");    
     var width = el.offsetWidth;
     var height = el.offsetHeight;
 
@@ -126,15 +126,13 @@ HTMLWidgets.widget({
         d3.event.sourceEvent.stopPropagation();
       }
       
+    svg = oldsvg
+        .append("g").attr("class","zoom-layer")
+        .append("g");
       
     // select the svg element and remove existing children
     // Needed, otherwise when redrawed with Shiny the old graph isn't eliminated
-    var svg = d3.select(el).select("svg");
     svg.selectAll("*").remove();
-    
-    svg = svg
-        .append("g").attr("class","zoom-layer")
-        .append("g")
         
     // add zooming if requested
     if (options.zoom) {
@@ -248,6 +246,34 @@ HTMLWidgets.widget({
         .style("stroke", '#fff')
         .style("stroke-width", 1);
         
+     // add legend option
+    if(options.legend){
+        var legendRectSize = 18;
+        var legendSpacing = 4;
+        var legend = oldsvg.selectAll('.legend')
+          .data(color.domain())
+          .enter()
+          .append('g')
+          .attr('class', 'legend')
+          .attr('transform', function(d, i) {
+            var height = legendRectSize + legendSpacing;
+            var offset =  height * color.domain().length / 2;
+            var horz = legendRectSize;
+            var vert = i * height+4;
+            return 'translate(' + horz + ',' + vert + ')';
+          });
+
+        legend.append('rect')
+          .attr('width', legendRectSize)
+          .attr('height', legendRectSize)
+          .style('fill', color)
+          .style('stroke', color);
+
+        legend.append('text')
+          .attr('x', legendRectSize + legendSpacing)
+          .attr('y', legendRectSize - legendSpacing)
+          .text(function(d) { return "Nano"; });
+    }
 
     //alert(gnodes);
     //alert(node);
