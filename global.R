@@ -70,23 +70,23 @@ from_igraph_to_data_frame= function(g_clust,ADJ2){
   return(list(edges=edges,vertices=vertices))
 }
 
-ADJ_matrix = function(W_ADJ,input,output,nano,drugs,chemical,disease,chemMat,join10){
+ADJ_matrix = function(W_ADJ,input,output,nano,drugs,chemical,disease,chemMat,join10,nNano = 29,nNodes = 3866){
   ADJ = matrix(0,length(cluster),length(cluster))
   rownames(ADJ) = colnames(ADJ) = V(graph_gw)$name
   
-  for(i in 1:29){
+  for(i in 1:nNano){
     ADJ[i,cluster==i]=1
   }
   
   ADJ2 = ADJ * as.matrix(W_ADJ)
-  ADJ2[1:29,1:29] = W_ADJ[1:29,1:29]
+  ADJ2[1:nNano,1:nNano] = W_ADJ[1:nNano,1:nNano]
   
   CQN = conditional_query_nodes(input,output,FALSE,nano,drugs,chemical,disease,chemMat,join10)
   selected_nodes = CQN$selected_nodes
   
   message("ADJ_matrix. selected_nodes: ",selected_nodes,"\n")
   
-  if(length(selected_nodes)< 3866){
+  if(length(selected_nodes)< nNodes){
     neigh = colnames(ADJ)[ADJ[selected_nodes,]!=0]
     sel_n = unique(c(selected_nodes,neigh)) 
     message("sel_n: ",sel_n,"\n")
@@ -96,10 +96,10 @@ ADJ_matrix = function(W_ADJ,input,output,nano,drugs,chemical,disease,chemMat,joi
     message("dim(ADJ2) ",dim(ADJ2),"\n")
     
     g_clust = graph.adjacency(adjmatrix = ADJ2,mode = "undirected",weighted = TRUE)
-    idx_n = which(colnames(ADJ) %in% nano)
-    idx_dr = which(colnames(ADJ) %in% drugs)
-    idx_c = which(colnames(ADJ) %in% chemical)
-    idx_di = which(colnames(ADJ) %in% disease)
+    idx_n = which(colnames(ADJ2) %in% nano)
+    idx_dr = which(colnames(ADJ2) %in% drugs)
+    idx_c = which(colnames(ADJ2) %in% chemical)
+    idx_di = which(colnames(ADJ2) %in% disease)
     
     V(g_clust)$type = rep("nano",dim(ADJ2)[1])
     V(g_clust)$type[idx_dr] ="drug"
@@ -107,13 +107,16 @@ ADJ_matrix = function(W_ADJ,input,output,nano,drugs,chemical,disease,chemMat,joi
     V(g_clust)$type[idx_di] ="disease"
     
     message("V(g_clust)$type  ",V(g_clust)$type ,"\n")
+    return(list(ADJ2=ADJ2,g_clust=g_clust))
+    
 
   }else{
     g_clust = graph.adjacency(adjmatrix = ADJ2,mode = "undirected",weighted = TRUE)
     V(g_clust)$type = V(graph_gw)$type  
+    return(list(ADJ2=ADJ2,g_clust=g_clust))
+    
   }
   
-  return(list(ADJ2=ADJ2,g_clust=g_clust))
 }
 
 conditional_query_nodes = function(input,output,DEBUGGING,nano,drugs,chemical,disease,chemMat,join10){

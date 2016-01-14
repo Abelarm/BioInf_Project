@@ -21,6 +21,7 @@ shinyServer(function(input, output) {
       ADJ2 = res$ADJ2
       g_clust = res$g_clust
       
+      message("class(g_clust)",class(g_clust),"\n")
       
       data_frame = from_igraph_to_data_frame(g_clust,ADJ2)
       edges = data_frame$edges
@@ -39,3 +40,4 @@ shinyServer(function(input, output) {
   })
   
 })
+
