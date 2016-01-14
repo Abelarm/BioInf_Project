@@ -79,7 +79,7 @@ HTMLWidgets.widget({
 
     for (var i = 0; i < imported_links.length; i++) {
       ln = imported_links[i];
-      if((ln.source<=28) && ((ln.target<=28))){
+      if((imported_nodes[ln.source].group == 1) && ((imported_nodes[ln.target].group == 1))){
         graph.links.push(ln);
         //alert("from imported: source: " + ln.source + " target: " + ln.target);
         //alert("from pushed: source: " + graph.links[i].source + " target: " + graph.links[i].target);
@@ -353,33 +353,28 @@ HTMLWidgets.widget({
       dise.degree = disedegree;
       dise.dim = Math.floor(disedegree/6);
       //alert("Degree: "+disedegree + " Dim: " + dise.dim);
-      graph.nodes.push(chem);
       
+      if(chem.degree != 0){
+        graph.nodes.push(chem);
+        lin1 = JSON.parse('{"source":' +  graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(chem) + ', "value": 1}');
+        graph.links.push(lin1);
+        openedNode[d.name].push(lin1);
+      }
       //openedNode[d.name].push(chem);
-      graph.nodes.push(phar);
-      
+      if(phar.degree != 0){
+        graph.nodes.push(phar);
+        lin2 = JSON.parse('{"source":' + graph.nodes.indexOf(d)+ ', "target": ' + graph.nodes.indexOf(phar) + ', "value": 1}');
+        graph.links.push(lin2);
+        openedNode[d.name].push(lin2);
+      }
       //openedNode[d.name].push(phar);
-      graph.nodes.push(dise);
+      if(dise.degree != 0){
+        graph.nodes.push(dise);
+        lin3 = JSON.parse('{"source":' + graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(dise) + ', "value": 1}');
+        graph.links.push(lin3);
+        openedNode[d.name].push(lin3);
+      }
       //openedNode[d.name].push(dise);
-    
-      //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(chem));
-      lin1 = JSON.parse('{"source":' +  graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(chem) + ', "value": 1}');
-      graph.links.push(lin1);
-      openedNode[d.name].push(lin1);
-      //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(phar));
-      lin2 = JSON.parse('{"source":' + graph.nodes.indexOf(d)+ ', "target": ' + graph.nodes.indexOf(phar) + ', "value": 1}');
-      graph.links.push(lin2);
-      openedNode[d.name].push(lin2);
-      //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(dise));
-      lin3 = JSON.parse('{"source":' + graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(dise) + ', "value": 1}');
-      graph.links.push(lin3);
-      openedNode[d.name].push(lin3);
-      
-      //alert("Num Archi dopo: " + graph.links.length);
-
-      //alert(graph.nodes);
-      //alert(graph.links);
-
       restartAdd();
     }
 
