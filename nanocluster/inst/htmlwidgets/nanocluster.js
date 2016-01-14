@@ -49,7 +49,8 @@ HTMLWidgets.widget({
     
     var color = eval(options.colourScale);
     var linkDistance = eval(options.linkDistance);
-    
+    //alert(options.linkDistance);
+    //alert(linkDistance);
     var oldsvg = d3.select(el).select("svg");    
     var width = el.offsetWidth;
     var height = el.offsetHeight;
@@ -522,7 +523,16 @@ HTMLWidgets.widget({
               .style("opacity", options.opacity / 2);
         })
         .style("opacity", options.opacity / 2)
-        .style("stroke", "#000")
+        .style("stroke",function(d){
+          if(d.value == 1){
+            return "#000000";
+          }
+          if(d.value>0){
+            return "#008000";
+          }else{
+            return "#FF0000";
+          }
+        })
         .style("stroke-width", function(d) { return stroke_width; });
 
       //alert("Lunghezza link dopo restart:"+  link.data().length);
