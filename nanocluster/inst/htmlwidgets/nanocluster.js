@@ -48,6 +48,7 @@ HTMLWidgets.widget({
     var force = force;
     
     var color = eval(options.colourScale);
+    var linkDistance = eval(options.linkDistance);
     
     var oldsvg = d3.select(el).select("svg");    
     var width = el.offsetWidth;
@@ -118,7 +119,7 @@ HTMLWidgets.widget({
       .nodes(graph.nodes)
       .links(graph.links)
       .charge(options.charge)
-      .linkDistance(options.linkDistance)
+      .linkDistance(linkDistance)
       .friction(0.95)
       .size([width, height])
       .on("tick", tickfunction)
