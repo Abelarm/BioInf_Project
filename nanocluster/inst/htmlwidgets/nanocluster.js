@@ -43,7 +43,7 @@ HTMLWidgets.widget({
     var maxdim = 20;
     var defaultdim = 5;
     var stroke_width = 2;
-    var padding = 6;
+    var padding = 2;
 
     var force = force;
     
@@ -809,7 +809,7 @@ HTMLWidgets.widget({
     function collide(alpha) {
       var quadtree = d3.geom.quadtree(graph.nodes);
       return function(d) {
-        var rb = 2*d.r + padding,
+        var rb = 2*this.r.baseVal.value + padding,
             nx1 = d.x - rb,
             nx2 = d.x + rb,
             ny1 = d.y - rb,
