@@ -142,6 +142,8 @@ HTMLWidgets.widget({
     var svg = oldsvg
         .append("g").attr("class","zoom-layer")
         .append("g");
+    
+    //svg.on("dblclick.zoom", null);
   
     // add zooming if requested
     if (options.zoom) {
@@ -154,7 +156,7 @@ HTMLWidgets.widget({
       zoom.on("zoom", redraw);
       d3.select(el).select("svg")
       .attr("pointer-events", "all")
-      .call(zoom);
+      .call(zoom).on("dblclick.zoom", null);
     }
     else {
       zoom.on("zoom", null);
@@ -206,7 +208,7 @@ HTMLWidgets.widget({
         .attr("class","node")
         .attr("r", maxdim)
         .style("fill", function(d) { return color(d.group); })
-        .on("click", function(d){
+        .on("dblclick", function(d){
           //alert("Ho cliccato " + d.name + " vaffanculo Dario Greco");
           if (! (d.name in openedNode)){
                   openedNode[d.name] = [];
@@ -556,7 +558,7 @@ HTMLWidgets.widget({
           //alert(d);
           return color(d.group); 
         })
-        .on("click",function(d){
+        .on("dbclick",function(d){
 
           //alert("clicked "+ d.name);
           //alert("openedNode " + openedNode[d.name]);
