@@ -129,11 +129,20 @@ HTMLWidgets.widget({
       
     var drag = force.drag()
         .on("dragstart", dragstart)
-      // allow force drag to work with pan/zoom drag
-      function dragstart(d) {
-        d3.event.sourceEvent.preventDefault();
-        d3.event.sourceEvent.stopPropagation();
-      }
+        .on("dragend", dragend);
+    
+    // allow force drag to work with pan/zoom drag
+    function dragstart(d) {
+      d3.event.sourceEvent.preventDefault();
+      d3.event.sourceEvent.stopPropagation();
+      force.stop();
+    }
+    
+    function dragend(d, i){
+      //fixed scazza tutto, bisogna aggiungere dei controlli quando si "apre" un nodo
+      //d.fixed = true;
+      force.resume();
+    }
       
     // select the svg element and remove existing children
     // Needed, otherwise when redrawed with Shiny the old graph isn't eliminated
@@ -154,7 +163,7 @@ HTMLWidgets.widget({
       zoom.on("zoom", redraw);
       d3.select(el).select("svg")
       .attr("pointer-events", "all")
-      .call(zoom);
+      .call(zoom).on("dblclick.zoom", null);
     }
     else {
       zoom.on("zoom", null);
@@ -198,7 +207,8 @@ HTMLWidgets.widget({
             .on("mouseover",mouseover)
             .on("mouseout",mouseout)
             .style("stroke",'#fff')
-            .style("stroke-width", "1.5px");
+            .style("stroke-width", "1.5px")
+            .call(drag);
 
 
     node = gnodes
@@ -206,7 +216,7 @@ HTMLWidgets.widget({
         .attr("class","node")
         .attr("r", maxdim)
         .style("fill", function(d) { return color(d.group); })
-        .on("click", function(d){
+        .on("dblclick", function(d){
           //alert("Ho cliccato " + d.name + " vaffanculo Dario Greco");
           if (! (d.name in openedNode)){
                   openedNode[d.name] = [];
@@ -556,7 +566,7 @@ HTMLWidgets.widget({
           //alert(d);
           return color(d.group); 
         })
-        .on("click",function(d){
+        .on("dblclick",function(d){
 
           //alert("clicked "+ d.name);
           //alert("openedNode " + openedNode[d.name]);
