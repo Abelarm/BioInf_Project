@@ -95,26 +95,11 @@ HTMLWidgets.widget({
       }
     }
     
-    // alert(numDrug);
-    // alert(numChem);
-    // alert(numDise);
-    //alert(nodi);
-    //alert(linki);
-    
     //END DATA PARSING
-    
-    
-
-    //graph.nodes = nodi;
-    //graph.links = linki;
-    
-    //alert("graph.links " + JSON.stringify(graph.links));
-    //alert("graph.nodes " + JSON.stringify(graph.nodes));
     
     //BEGIN RENDERING
     
     var zoom = d3.behavior.zoom();
-
     
     force
       .nodes(graph.nodes)
@@ -140,7 +125,7 @@ HTMLWidgets.widget({
     
     function dragend(d, i){
       //fixed scazza tutto, bisogna aggiungere dei controlli quando si "apre" un nodo
-      //d.fixed = true;
+      d.fixed = true;
       force.resume();
     }
       
@@ -259,6 +244,16 @@ HTMLWidgets.widget({
             return;
           }
         })
+        .on("click", function(d){
+           var event = d3.event;
+           ctrlPressed =event.ctrlKey;
+           if (ctrlPressed) {
+            if (d.fixed) {
+             d.fixed = false; 
+            } 
+           }
+          }
+        )
         .style("stroke", '#fff')
         .style("stroke-width", 1);
         
@@ -348,6 +343,7 @@ HTMLWidgets.widget({
       chem = JSON.parse(JSON.stringify(d));
       chem.name = "ChemOf"+d.name;
       chem.group = 4;
+      chem.fixed = false;
       chemdegree = countDegree(d,chem.group);
       chem.degree = chemdegree;
       chem.dim = Math.floor(chemdegree/6);
@@ -356,6 +352,7 @@ HTMLWidgets.widget({
       phar = JSON.parse(JSON.stringify(d));
       phar.name = "PharOf"+d.name;
       phar.group = 3;
+      phar.fixed = false;
       phardegree = countDegree(d,phar.group);
       //alert("---------------------"+ (numDrug/phardegree));
       phar.degree = phardegree;
@@ -365,6 +362,7 @@ HTMLWidgets.widget({
       dise = JSON.parse(JSON.stringify(d));
       dise.name = "DiseOf"+d.name;
       dise.group = 2;
+      dise.fixed = false;
       disedegree = countDegree(d,dise.group);
       dise.degree = disedegree;
       dise.dim = Math.floor(disedegree/6);
@@ -563,6 +561,16 @@ HTMLWidgets.widget({
           //alert(d);
           return color(d.group); 
         })
+        .on("click", function(d){
+           var event = d3.event;
+           ctrlPressed =event.ctrlKey;
+           if (ctrlPressed) {
+            if (d.fixed) {
+             d.fixed = false; 
+            } 
+           }
+          }
+        )
         .on("dblclick",function(d){
           //alert("clicked "+ d.name);
           //alert("openedNode " + openedNode[d.name]);
@@ -603,7 +611,8 @@ HTMLWidgets.widget({
                 return;
               }
           }
-        });
+        })
+        .call(drag);
 
      for (i = 0; i < wrongnode[0].length; i++) {
         nd = wrongnode[0][i];
