@@ -151,6 +151,8 @@ HTMLWidgets.widget({
     var svg = oldsvg
         .append("g").attr("class","zoom-layer")
         .append("g");
+    
+    //svg.on("dblclick.zoom", null);
   
     // add zooming if requested
     if (options.zoom) {
@@ -567,7 +569,6 @@ HTMLWidgets.widget({
           return color(d.group); 
         })
         .on("dblclick",function(d){
-
           //alert("clicked "+ d.name);
           //alert("openedNode " + openedNode[d.name]);
 
