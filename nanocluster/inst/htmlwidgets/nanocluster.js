@@ -266,39 +266,59 @@ HTMLWidgets.widget({
         .style("stroke-width", 1);
         
      // add legend option
-    if(options.legend){
-        var legendRectSize = 18;
-        var legendSpacing = 4;
-        var legend = oldsvg.selectAll('.legend')
-          .data(color.domain())
-          .enter()
-          .append('g')
-          .attr('class', 'legend')
-          .attr('transform', function(d, i) {
-            var height = legendRectSize + legendSpacing;
-            var offset =  height * color.domain().length / 2;
-            var horz = legendRectSize;
-            var vert = i * height+4;
-            return 'translate(' + horz + ',' + vert + ')';
-          });
+     
+     drawLegend();
+     
+    function drawLegend(){
+        if(options.legend){
+            var legendRectSize = 18;
+            var legendSpacing = 4;
+            var colorDomain = color.domain();
+            oldsvg.selectAll('.legend').remove();
+            var legend = oldsvg.selectAll('.legend')
+              .data(color.domain())
+              .enter()
+              .append('g')
+              .attr('class', 'legend')
+              .attr('transform', function(d, i) {
+                var height = legendRectSize + legendSpacing;
+                var offset =  height * color.domain().length / 2;
+                var horz = legendRectSize;
+                var vert = i * height+4;
+                return 'translate(' + horz + ',' + vert + ')';
+              });
 
-        legend.append('rect')
-          .attr('width', legendRectSize)
-          .attr('height', legendRectSize)
-          .style('fill', color)
-          .style('stroke', color);
+            legend.append('rect')
+              .attr('width', legendRectSize)
+              .attr('height', legendRectSize)
+              .style('fill', color)
+              .style('stroke', color);
 
-        legend.append('text')
-          .attr('x', legendRectSize + legendSpacing)
-          .attr('y', legendRectSize - legendSpacing)
-          .text(function(d) { return "Nano"; });
+            legend.append('text')
+              .attr('x', legendRectSize + legendSpacing)
+              .attr('y', legendRectSize - legendSpacing)
+              .text(function(d) { 
+                switch(d){
+                  case(1):
+                    return "Nanomaterial";
+                    break;
+                  case(2):
+                    return "Disease";
+                    break;
+                  case(3):
+                    return "Drug";
+                    break;
+                  case(4):
+                    return "Chemical";
+                } 
+              });
+        }
     }
 
     //alert(gnodes);
     //alert(node);
     
     //END RENDER, SUPPORT FUNCTIONS HERE
-     
     function tickfunction() {
       //alert("entro");
       link.attr("x1", function(d) { return d.source.x; })
@@ -639,6 +659,7 @@ HTMLWidgets.widget({
       //alert(node.data());
 
       //alert("Lunghezza node dopo restart:"+ node.data().length);
+      drawLegend();
       force.stop();
       force.start();
     }
@@ -677,6 +698,7 @@ HTMLWidgets.widget({
 
 
       //alert("Lunghezza node dopo restart:"+ node.data().length);
+      drawLegend();
       force.stop();
       force.start();
 
@@ -844,7 +866,7 @@ HTMLWidgets.widget({
       //console.log(d3.select(this).select("text"));
 
 
-      console.log(l.select("text")[0]);
+      //console.log(l.select("text")[0]);
 
       l.append('svg:text')
         .text(function(d) { return (d.value).toFixed(2); })
@@ -895,7 +917,7 @@ HTMLWidgets.widget({
               .style("opacity", options.opacity/2);
 
 
-      console.log(l.select("text")[0]);
+      //console.log(l.select("text")[0]);
 
       if (l.select("text")[0][0] != null){
 
@@ -911,7 +933,7 @@ HTMLWidgets.widget({
 
       if (toggle == 0) {
           //Reduce the opacity of all but the neighbouring nodes
-          console.log(d);
+          //console.log(d);
           gnodes.select("circle").style("opacity", function (o) {
               return neighboring(d, o) | neighboring(o, d) ? 1 : 0.1;
           });

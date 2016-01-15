@@ -1,7 +1,7 @@
 library(shiny)
 library(nanocluster)
 library(igraph)
-setwd("/home/neuronelab/Scrivania/")
+setwd("~/")
 
 source("BioInf_Project/global.R")
 load("BioInf_Project/www/nano_based_clustering.RData")
