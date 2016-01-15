@@ -33,6 +33,14 @@ HTMLWidgets.widget({
     var imported_links = HTMLWidgets.dataframeToD3(x.links);
     var imported_nodes = HTMLWidgets.dataframeToD3(x.nodes);
     
+    var groups = x.groups;
+    var cluster_group = x.cluster_group;
+    var num_of_elem_for_group = {};
+    var last_level = x.last_level;
+
+    for (var i = 0, len = groups.length; i < len; i++) {
+      num_of_elem_for_group[groups[i]] = 0;  
+    }
     //alert("links: " + JSON.stringify(imported_links));
     //alert("nodes: " + JSON.stringify(imported_nodes));
 
@@ -67,35 +75,25 @@ HTMLWidgets.widget({
     nod_len = imported_nodes.length;
     for (index = 0; index < nod_len; ++index) {
       nd = imported_nodes[index];
-      if (nd.group==1){
+      if (nd.group==cluster_group){
         //alert("Sto aggiungendo: " + index);
         indexMap[index] = graph.nodes.length; 
+        nd.level = 1;
         graph.nodes.push(nd);
         linkedByIndex[graph.nodes.length + "," + graph.nodes.length] = 1;
-      }else{
-        if(nd.group==2){
-          numDise++;
-        }else{
-          if(nd.group==3){
-            numDrug++;
-          }else{
-            numChem++;
-          }
-        }
       }
+      num_of_elem_for_group[nd.group] += 1;
     }
 
     for (var i = 0; i < imported_links.length; i++) {
       ln = imported_links[i];
       
-      if((imported_nodes[ln.source].group == 1) && ((imported_nodes[ln.target].group == 1))){
+      if((imported_nodes[ln.source].group == cluster_group) && ((imported_nodes[ln.target].group == cluster_group))){
         newln = JSON.parse(JSON.stringify(ln));
         newln.source = indexMap[ln.source]; 
         newln.target = indexMap[ln.target];
         graph.links.push(newln);
         linkedByIndex[newln.source + "," + newln.target] = 1;
-        //alert("from imported: source: " + ln.source + " target: " + ln.target);
-        //alert(" group source: " + imported_nodes[ln.source].group + "group target: " + imported_nodes[ln.target].group);
       }
     }
     
@@ -127,8 +125,7 @@ HTMLWidgets.widget({
       force.stop();
     }
     
-    function dragend(d, i){
-      //fixed scazza tutto, bisogna aggiungere dei controlli quando si "apre" un nodo
+    function dragend(d){
       d.fixed = true;
       force.resume();
     }
@@ -204,7 +201,7 @@ HTMLWidgets.widget({
         .style("fill", function(d) { return color(d.group); })
         .on("dblclick", function(d){
           //alert("Ho cliccato " + d.name + " vaffanculo Dario Greco");
-          if (! (d.name in openedNode)){
+          if (!(d.name in openedNode)){
                   openedNode[d.name] = [];
                   addNodes(d);
                   return;
@@ -267,7 +264,7 @@ HTMLWidgets.widget({
         
      // add legend option
      
-     drawLegend();
+    drawLegend();
      
     function drawLegend(){
         if(options.legend){
@@ -310,6 +307,8 @@ HTMLWidgets.widget({
                     break;
                   case(4):
                     return "Chemical";
+                  case default:
+                    return d;
                 } 
               });
         }
@@ -367,56 +366,21 @@ HTMLWidgets.widget({
       //d.append("Opened","True");
       
       //alert("Num Archi prima: " + graph.links.length);
-      
-      chem = JSON.parse(JSON.stringify(d));
-      chem.name = "ChemOf"+d.name;
-      chem.group = 4;
-      chem.fixed = false;
-      chemdegree = countDegree(d,chem.group);
-      chem.degree = chemdegree;
-      chem.dim = Math.floor(chemdegree/6);
-      //alert("Degree: "+chemdegree + " Dim: " + chem.dim);
-
-      phar = JSON.parse(JSON.stringify(d));
-      phar.name = "PharOf"+d.name;
-      phar.group = 3;
-      phar.fixed = false;
-      phardegree = countDegree(d,phar.group);
-      //alert("---------------------"+ (numDrug/phardegree));
-      phar.degree = phardegree;
-      phar.dim = Math.floor(phardegree/6);
-      //alert("Degree: " +phardegree + " Dim: " + phar.dim);
-
-      dise = JSON.parse(JSON.stringify(d));
-      dise.name = "DiseOf"+d.name;
-      dise.group = 2;
-      dise.fixed = false;
-      disedegree = countDegree(d,dise.group);
-      dise.degree = disedegree;
-      dise.dim = Math.floor(disedegree/6);
-      //alert("Degree: "+disedegree + " Dim: " + dise.dim);
-      
-      if(chem.degree != 0){
-        graph.nodes.push(chem);
-        lin1 = JSON.parse('{"source":' +  graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(chem) + ', "value": 1}');
-        graph.links.push(lin1);
-        openedNode[d.name].push(lin1);
+      for (var i = 0, len = groups.length; i < len; i++) {
+        var toAdd = JSON.parse(JSON.stringify(d));
+        toAdd.name = groups[i]+d.name;
+        toAdd.group = groups[i];
+        toAdd.fixed = false;
+        toAdd.level = d.level + 1;
+        toAdd.degree = countDegree(d, toAdd.group);
+        toAdd.dim = Math.floor(toAdd.degree);
+        if(!(toAdd.degree == 0)){
+          graph.nodes.push(toAdd);
+          var lin = JSON.parse('{"source":' +  graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(toAdd) + ', "value": 1}');
+          graph.links.push(lin);
+          openedNode[d.name].push(lin);
+        }
       }
-      //openedNode[d.name].push(chem);
-      if(phar.degree != 0){
-        graph.nodes.push(phar);
-        lin2 = JSON.parse('{"source":' + graph.nodes.indexOf(d)+ ', "target": ' + graph.nodes.indexOf(phar) + ', "value": 1}');
-        graph.links.push(lin2);
-        openedNode[d.name].push(lin2);
-      }
-      //openedNode[d.name].push(phar);
-      if(dise.degree != 0){
-        graph.nodes.push(dise);
-        lin3 = JSON.parse('{"source":' + graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(dise) + ', "value": 1}');
-        graph.links.push(lin3);
-        openedNode[d.name].push(lin3);
-      }
-      //openedNode[d.name].push(dise);
       restartAdd();
     }
 
