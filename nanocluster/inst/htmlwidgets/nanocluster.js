@@ -179,16 +179,11 @@ HTMLWidgets.widget({
     link = svg.selectAll(".link")
         .data(graph.links)
         .enter()
+        .append("g")
+        .on("mouseover", LinkOver)
+        .on("mouseout", LinkOut)
         .append("line")
         .attr("class", "link")
-        .on("mouseover", function(d) {
-            d3.select(this)
-              .style("opacity", options.opacity);
-        })
-        .on("mouseout", function(d) {
-            d3.select(this)
-              .style("opacity", options.opacity/2);
-        })
         .style("opacity",options.opacity/2)
         .style("stroke-width", function(d) { return Math.abs(d.value); })
         .style("stroke",function(d){
@@ -818,6 +813,79 @@ HTMLWidgets.widget({
           return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
         });
       };
+    }
+    
+    function LinkOver(){
+
+    l = d3.select(this);
+
+    l.select(".link")
+            .style("opacity", options.opacity);
+
+    l.select(".link").transition()
+        .duration(750);
+      //console.log(d3.select(this).select("text"));
+
+
+      console.log(l.select("text")[0]);
+
+      l.append('svg:text')
+        .text(function(d) { return (d.value).toFixed(2); })
+        .style("fill",function(d){
+          if(d.value>0){
+            return "#008000";
+          }else{
+            return "#FF0000";
+          }
+         })
+        .style("stroke-width", ".5px")
+        .style("stroke","#fff")
+        .style("font", options.fontSize + "px " + options.fontFamily)
+        .transition()
+          .duration(750)
+          .attr("x",33)
+          .attr("class", "nodetext")
+          .attr("dx", 12)
+          .attr("dy", ".35em")
+        .style("opacity", 1)
+        .style("pointer-events", "none")
+        .style("font", options.clickTextSize + "px ")
+        .attr("x", function (d) {
+              x1 = d.source.x;
+              //console.log(x1);
+              x2 = d.target.x;
+              //console.log(x2);
+              ris = (x1+x2)/2;
+              //console.log(ris)
+              return ris;
+        })
+        .attr("y", function (d) {
+              y1 = d.source.y;
+              //console.log(y1);
+              y2 = d.target.y;
+              //console.log(y2);
+              ris = (y1+y2)/2;
+              //console.log(ris);
+              return ris;
+        
+        });
+    }
+
+    function LinkOut(){
+      l = d3.select(this);
+
+      l.select(".link") 
+              .style("opacity", options.opacity/2);
+
+
+      console.log(l.select("text")[0]);
+
+      if (l.select("text")[0][0] != null){
+
+        l.select("text").remove();
+        return;
+
+      }
     }    
     
   }//end render
