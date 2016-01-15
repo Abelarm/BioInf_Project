@@ -105,17 +105,10 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
       .data(graph.links)
       .enter()
       .append("g")
+      .on("mouseover", LinkOver)
+      .on("mouseout", LinkOut)
       .attr("class", "link")
-      .on("click",clickLink)
       .append("line")
-      .on("mouseover", function(d) {
-          d3.select(this)
-            .style("opacity", 1);
-      })
-      .on("mouseout", function(d) {
-          d3.select(this)
-            .style("opacity", 0.5);
-      })
       .style("opacity",0.5)
       .style("stroke-width", function(d) { return Math.abs(d.value); })
       .style("stroke",function(d){
@@ -699,7 +692,10 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
     };
   }
 
-  function clickLink(){
+  function LinkOver(){
+
+    d3.select(this)
+            .style("opacity", 1);
 
     d3.select(this).select("link").transition()
         .duration(750);
@@ -709,12 +705,6 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
 
       console.log(l.select("text")[0]);
 
-      if (l.select("text")[0][0] != null){
-
-        l.select("text").remove();
-        return;
-
-      }
       l.append('svg:text')
         .text(function(d) { return (d.value).toFixed(2); })
         .style("fill",function(d){
@@ -756,6 +746,22 @@ d3.json("nano_cluster.json", function(error, fullgraph) {
         
         });
 
+  }
+
+  function LinkOut(){
+    d3.select(this)
+            .style("opacity", 0.5);
+
+    l = d3.select(this);
+
+    console.log(l.select("text")[0]);
+
+    if (l.select("text")[0][0] != null){
+
+      l.select("text").remove();
+      return;
+
+    }
   }
 
 </script>
