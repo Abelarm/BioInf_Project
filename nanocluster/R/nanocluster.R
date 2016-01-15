@@ -81,7 +81,7 @@ nanocluster <- function(Links,
   # create widget
   htmlwidgets::createWidget(
     name = "nanocluster",
-    x = list(links = LinksDF, nodes = NodesDF, options = options, groups = list("nano", "dise", "drug", "chem"), cluster_group = "nano"),
+    x = list(links = LinksDF, nodes = NodesDF, options = options, groups = list("nano", "dise", "drug", "chem"), cluster_group = "nano", last_level = 3),
     width = width,
     height = height,
     htmlwidgets::sizingPolicy(padding = 10, browser.fill = TRUE),
