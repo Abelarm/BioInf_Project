@@ -43,7 +43,7 @@ HTMLWidgets.widget({
     var maxdim = 20;
     var defaultdim = 5;
     var stroke_width = 2;
-    var padding = 2;
+    var padding = 6;
 
     var force = force;
     
@@ -55,8 +55,10 @@ HTMLWidgets.widget({
     var width = el.offsetWidth;
     var height = el.offsetHeight;
 
+    var toggle = 0;
     var link,node,gnodes;
     var openedNode = {};
+    var linkedByIndex = {};
     var indexMap = {};
     var numChem=0,numDrug=0,numDise=0;
 
@@ -69,6 +71,7 @@ HTMLWidgets.widget({
         //alert("Sto aggiungendo: " + index);
         indexMap[index] = graph.nodes.length; 
         graph.nodes.push(nd);
+        linkedByIndex[graph.nodes.length + "," + graph.nodes.length] = 1;
       }else{
         if(nd.group==2){
           numDise++;
@@ -90,6 +93,7 @@ HTMLWidgets.widget({
         newln.source = indexMap[ln.source]; 
         newln.target = indexMap[ln.target];
         graph.links.push(newln);
+        linkedByIndex[newln.source + "," + newln.target] = 1;
         //alert("from imported: source: " + ln.source + " target: " + ln.target);
         //alert(" group source: " + imported_nodes[ln.source].group + "group target: " + imported_nodes[ln.target].group);
       }
@@ -246,8 +250,12 @@ HTMLWidgets.widget({
         })
         .on("click", function(d){
            var event = d3.event;
-           ctrlPressed =event.ctrlKey;
-           if (ctrlPressed) {
+           var ctrlPressed = event.ctrlKey;
+           var shiftPressed = event.shiftKey;
+           if(shiftPressed){
+            connectedNodes(d);
+           }
+           else if (ctrlPressed) {
             if (d.fixed) {
              d.fixed = false; 
             } 
@@ -895,7 +903,37 @@ HTMLWidgets.widget({
         return;
 
       }
-    }    
+    }  
+    
+    function connectedNodes(d) {
+
+    //console.log(linkedByIndex);
+
+      if (toggle == 0) {
+          //Reduce the opacity of all but the neighbouring nodes
+          console.log(d);
+          gnodes.select("circle").style("opacity", function (o) {
+              return neighboring(d, o) | neighboring(o, d) ? 1 : 0.1;
+          });
+          link.style("opacity", function (o) {
+              return d.index==o.source.index | d.index==o.target.index ? 1 : 0.1;
+          });
+          
+          //Reduce the op
+          toggle = 1;
+      } else {
+          //Put them back to opacity=1
+          gnodes.select("circle").style("opacity", 1);
+          link.style("opacity", options.opacity/2);
+          toggle = 0;
+      }
+
+  }
+
+  function neighboring(a, b) {
+    //console.log("Source: " + a.index + " Target: " + b.index)
+      return linkedByIndex[a.index + "," + b.index];
+  }  
     
   }//end render
 }) //end htmlwidget
