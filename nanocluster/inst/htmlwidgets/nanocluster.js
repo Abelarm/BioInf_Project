@@ -39,6 +39,7 @@ HTMLWidgets.widget({
     var cluster_group = x.cluster_group;
     var num_of_elem_for_group = {};
     var last_level = x.last_level;
+    var num_gerarchies = last_level - 1;
 
     for (var i = 0, len = groups.length; i < len; i++) {
       num_of_elem_for_group[groups[i]] = 0;  
@@ -204,7 +205,7 @@ HTMLWidgets.widget({
         .style("fill", function(d) { return color(d.group); })
         .on("dblclick", function(d){
           if (!(d.name in openedNodes)){
-            if(d.level < last_level){
+            if(d.level < num_gerarchies - 1){
               openedNodes[d.name] = [];
               addNodes(d);
               return;
@@ -356,12 +357,13 @@ HTMLWidgets.widget({
       // alert("Entrato nella funzione addTrueNode, chiamato da: " + d.name);
       var father = fatherOf[d.name];
       // alert(JSON.stringify(fathers));
-      openedNode[d.name] = [];
+      // repopulated at the end 
+      openedNodes[d.name] = [];
       // alert(father);
 
       var index;
       for(i =0; i<imported_nodes.length; ++i){
-        if(imported_nodes[i].name.indexOf(father) == 0){
+        if(imported_nodes[i].name == father){
           index=i;
           break;
         }
@@ -369,31 +371,28 @@ HTMLWidgets.widget({
 
       // alert("index of father: " + index);
 
-      toAddLink = [];
-      toAddNodes = [];
-      IndNodes = graph.nodes.length;
+      var toAddLink = [];
+      var toAddNodes = [];
+      var IndNodes = graph.nodes.length;
       //alert("LEN FULL GRAPH LINKS: " + FullGraph.links.source.length)
 
       var numlin = 0;
       for(j=0; j<imported_links.length; ++j){
-
-
         if ((imported_links[j].source == index) && (imported_nodes[imported_links[j].target].group == type)){
-          
           //alert("Aggiungo");
           //alert(FullGraph.links.source[j] + " " + FullGraph.links.target[j]);
-          nameNodeToAdd = imported_nodes[imported_links[j].target].name;
-          groupNodeToAdd = imported_nodes[imported_links[j].target].group;
-          toParse = '{"name":"' +nameNodeToAdd+ '", "group":' + groupNodeToAdd + '}';
+          var nameNodeToAdd = imported_nodes[imported_links[j].target].name;
+          var groupNodeToAdd = imported_nodes[imported_links[j].target].group;
+          var toParse = '{"name":"' +nameNodeToAdd+ '", "group":"' + groupNodeToAdd + '"}';
           toAddNodes.push(JSON.parse(toParse));
 
-          source = graph.nodes.indexOf(d);
+          var source = graph.nodes.indexOf(d);
           //alert(source);
-          target = IndNodes;
-          value = imported_links[j].value;  
-          forparser = '{"source":' + source + ', "target":' + target + ', "value":' + value + '}';
+          var target = IndNodes;
+          var value = imported_links[j].value;  
+          var forparser = '{"source":' + source + ', "target":' + target + ', "value":' + value + '}';
           //alert(forparser);      
-          lin = JSON.parse(forparser);
+          var lin = JSON.parse(forparser);
           IndNodes++;
           toAddLink.push(lin);
         }
@@ -503,19 +502,31 @@ HTMLWidgets.widget({
           }
         )
         .on("dblclick",function(d){
-          var ind = openedNodes.indexOf(d.name);
-          if (ind < 0){
-            if(d.level < last_level){
-              openedNodes.push(d.name);
+          if (!(d.name in openedNodes)){
+            if(d.level < num_gerarchies - 1){
+              openedNodes[d.name] = [];
               addNodes(d);
               return;
-            } else{
+            }
+            else{
               addTrueNode(d, d.group);
             }
           }
-         else{
-          removeNodes(d);
-         }
+          else{
+            var fullname = d.name;
+            //probably needs work here
+            for (var l = 0; l < d.level; l++) {
+             fullname = d.group+"Of"+d.name; 
+            }
+            for(i =0; i<graph.nodes.length; ++i){
+              if(graph.nodes[i].name == fullname){
+                removeNodes(graph.nodes[i]);
+                break;
+              }
+            }
+            removeNodes(d);
+            return;
+          }
         })
         .call(drag);
 
