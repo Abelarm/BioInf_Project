@@ -76,11 +76,12 @@ nanocluster <- function(Links,
         opacityNoHover = opacityNoHover,
         clickAction = clickAction
   )
-  
+
+  #hardcoding just for tests 
   # create widget
   htmlwidgets::createWidget(
     name = "nanocluster",
-    x = list(links = LinksDF, nodes = NodesDF, options = options),
+    x = list(links = LinksDF, nodes = NodesDF, options = options, groups = list("nano", "dise", "drug", "chem"), cluster_group = "nano"),
     width = width,
     height = height,
     htmlwidgets::sizingPolicy(padding = 10, browser.fill = TRUE),
