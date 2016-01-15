@@ -33,6 +33,8 @@ HTMLWidgets.widget({
     var imported_links = HTMLWidgets.dataframeToD3(x.links);
     var imported_nodes = HTMLWidgets.dataframeToD3(x.nodes);
     
+    //groups are strings 
+    //same cluster_group
     var groups = x.groups;
     var cluster_group = x.cluster_group;
     var num_of_elem_for_group = {};
@@ -51,6 +53,8 @@ HTMLWidgets.widget({
     var maxdim = 20;
     var defaultdim = 5;
     var stroke_width = 2;
+    
+    //useful for collision
     var padding = 2;
 
     var force = force;
@@ -367,18 +371,20 @@ HTMLWidgets.widget({
       
       //alert("Num Archi prima: " + graph.links.length);
       for (var i = 0, len = groups.length; i < len; i++) {
-        var toAdd = JSON.parse(JSON.stringify(d));
-        toAdd.name = groups[i]+d.name;
-        toAdd.group = groups[i];
-        toAdd.fixed = false;
-        toAdd.level = d.level + 1;
-        toAdd.degree = countDegree(d, toAdd.group);
-        toAdd.dim = Math.floor(toAdd.degree);
-        if(!(toAdd.degree == 0)){
-          graph.nodes.push(toAdd);
-          var lin = JSON.parse('{"source":' +  graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(toAdd) + ', "value": 1}');
-          graph.links.push(lin);
-          openedNode[d.name].push(lin);
+        if(!(groups[i] == cluster_group)){
+          var toAdd = JSON.parse(JSON.stringify(d));
+          toAdd.name = groups[i]+d.name;
+          toAdd.group = groups[i];
+          toAdd.fixed = false;
+          toAdd.level = d.level + 1;
+          toAdd.degree = countDegree(d, toAdd.group);
+          toAdd.dim = Math.floor(toAdd.degree);
+          if(!(toAdd.degree == 0)){
+            graph.nodes.push(toAdd);
+            var lin = JSON.parse('{"source":' +  graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(toAdd) + ', "value": 1}');
+            graph.links.push(lin);
+            openedNode[d.name].push(lin);
+          }
         }
       }
       restartAdd();
@@ -389,6 +395,7 @@ HTMLWidgets.widget({
       fathers = Object.keys(openedNode);
       // alert(JSON.stringify(fathers));
       var father;
+      var found = false;
 
       for(index = 0; index < fathers.length; ++index){
 
@@ -398,34 +405,26 @@ HTMLWidgets.widget({
         // alert(d.name.indexOf("DiseOf"+f));
         // alert(d.name.indexOf("ChemOf"+f));
         // alert(d.name.indexOf("PharOf"+f));
-        if (d.name.indexOf("ChemOf"+f) == 0){
-          father = f;
-          // alert(father);
-          break;
-
+        for (var i = 0, len = groups.length; i < len; i++) {
+          if (d.name.indexOf(group+"Of"+f) == 0){
+            father = f;
+            found = true;
+            break;
+          }
         }
-        if(d.name.indexOf("DiseOf"+f) == 0){
-          father = f;
-          // alert(father);
-          break;
+        if (found) {
+          break; 
         }
-        if(d.name.indexOf("PharOf"+f) == 0){
-          father = f;
-          // alert(father);
-          break;
-        }
-          
       }
       openedNode[d.name] = [];
       // alert(father);
 
       var index;
       for(i =0; i<imported_nodes.length; ++i){
-
-          if(imported_nodes[i].name.indexOf(father) == 0){
-            index=i;
-            break;
-          }
+        if(imported_nodes[i].name.indexOf(father) == 0){
+          index=i;
+          break;
+        }
       }
 
       // alert("index of father: " + index);
@@ -567,41 +566,10 @@ HTMLWidgets.widget({
           //alert("clicked "+ d.name);
           //alert("openedNode " + openedNode[d.name]);
 
-          if (d.name.indexOf("ChemOf") > -1){
-
-              if (!(d.name in openedNode) || openedNode[d.name] == 0){
-                // alert("Inserisco nodi di: "+ d.name);
-                addTrueNode(d,4);
-                return;
-              }else{
-                //alert("Rimuovo nodi di: "+ d.name);
-                removeNodes(d);
-                return;
-              }
-          }
-          if (d.name.indexOf("PharOf") > -1){
-
-              if (! (d.name in openedNode) || openedNode[d.name] == 0 ){
-                // alert("Inserisco nodi di: "+ d.name);
-                addTrueNode(d,3);
-                return;
-              }else{
-               //alert("Rimuovo nodi di: "+ d.name);
-                removeNodes(d);
-                return;
-              }
-          }
-          if (d.name.indexOf("DiseOf") > -1){
-            
-            if (! (d.name in openedNode) || openedNode[d.name] == 0 ){
-                // alert("Inserisco nodi di: "+ d.name);
-                addTrueNode(d,2);
-                return;
-              }else{
-                //alert("Rimuovo nodi di: "+ d.name);
-                removeNodes(d);
-                return;
-              }
+          if(!(d.name in openedNode) || openedNode[d.name] == 0){
+            addTrueNode(d, d.group); 
+          } else{
+            removeNodes(d); 
           }
         })
         .call(drag);
@@ -670,7 +638,7 @@ HTMLWidgets.widget({
 
     function countDegree(d,type){//OK
     //alert("in countDegree"); OK
-
+      //founding node...
       for(i =0; i<imported_nodes.length; ++i){
 
           if(imported_nodes[i].name == d.name){
@@ -679,7 +647,8 @@ HTMLWidgets.widget({
             break;
           }
       }
-      degree =0;
+      //once founded, count degree by iterating on edges
+      degree = 0;
       for(j=0; j<imported_links.length; ++j){
 
         if ((imported_links[j].source == index) && (imported_nodes[imported_links[j].target].group == type))
