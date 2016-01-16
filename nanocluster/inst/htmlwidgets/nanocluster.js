@@ -69,6 +69,7 @@ HTMLWidgets.widget({
     var toggle = 0;
     var link,node,gnodes;
     var fatherOf = {};
+    var sons = {};
     var openedNodes = {};
     var linkedByIndex = {};
     var indexMap = {};
@@ -212,15 +213,11 @@ HTMLWidgets.widget({
             }
             else{
               addTrueNode(d, d.group);
+	      return;
             }
           }
           else{
-            for(i =0; i<graph.nodes.length; ++i){
-              if(graph.nodes[i].name == d.name){
-                removeNodes(graph.nodes[i]);
-                break;
-              }
-            }
+	    //d.name is in openedNodes
             removeNodes(d);
             return;
           }
@@ -327,6 +324,7 @@ HTMLWidgets.widget({
       
       
     function addNodes(d){ //ok!
+      sons[d.name] = [];
       for (var i = 0, len = groups.length; i < len; i++) {
         if(!(groups[i] == cluster_group)){
           var toAdd = JSON.parse(JSON.stringify(d));
@@ -342,6 +340,7 @@ HTMLWidgets.widget({
             graph.links.push(lin);
             openedNodes[d.name].push(lin);
             fatherOf[toAdd.name] = d.name;
+	    sons[d.name].push(toAdd);
           }
         }
       }
@@ -414,11 +413,15 @@ HTMLWidgets.widget({
 
     function removeNodes(d){
 
-      //alert("Lunghezza link prima removeNodes:"+ link.data().length);
-      //alert("Lunghezza node prima removeNodes:"+ node.data().length);
-
       var toremove = openedNodes[d.name];
-      //alert(toremove.length);
+      
+      if(d.name in sons){
+	for (var i = 0, len = sons[d.name].length; i < len; i++) {
+	  if (sons[d.name][i].name in openedNodes) {
+	    removeNodes(sons[d.name][i]);
+	  }	
+        }
+      }
 
       toremove.forEach(function(link) {
 
@@ -428,13 +431,9 @@ HTMLWidgets.widget({
       });
 
       delete openedNodes[d.name];
-
-      //alert("Lunghezza link dopo removeNodes:"+ graph.links.length);
-      //alert("Lunghezza node dopo removeNodes:"+ graph.nodes.length);
-      
+      delete sons[d.name];
 
       restartRemove();
-
     }
 
     function restartAdd(){
@@ -513,17 +512,7 @@ HTMLWidgets.widget({
             }
           }
           else{
-            var fullname = d.name;
-            //probably needs work here
-            for (var l = 0; l < d.level; l++) {
-             fullname = d.group+"Of"+d.name; 
-            }
-            for(i =0; i<graph.nodes.length; ++i){
-              if(graph.nodes[i].name == fullname){
-                removeNodes(graph.nodes[i]);
-                break;
-              }
-            }
+	    //d.name is in openedNodes
             removeNodes(d);
             return;
           }
