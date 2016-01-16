@@ -215,13 +215,8 @@ HTMLWidgets.widget({
             }
           }
           else{
-            var fullname = d.name;
-            //probably needs work here
-            for (var l = 0; l < d.level; l++) {
-             fullname = d.group+"Of"+d.name; 
-            }
             for(i =0; i<graph.nodes.length; ++i){
-              if(graph.nodes[i].name == fullname){
+              if(graph.nodes[i].name == d.name){
                 removeNodes(graph.nodes[i]);
                 break;
               }
@@ -355,7 +350,7 @@ HTMLWidgets.widget({
 
     function addTrueNode(d,type){
       // alert("Entrato nella funzione addTrueNode, chiamato da: " + d.name);
-      var father = fatherOf[d.name];
+      var fatherName = fatherOf[d.name];
       // alert(JSON.stringify(fathers));
       // repopulated at the end 
       openedNodes[d.name] = [];
@@ -363,11 +358,15 @@ HTMLWidgets.widget({
 
       var index;
       for(i =0; i<imported_nodes.length; ++i){
-        if(imported_nodes[i].name == father){
+        if(imported_nodes[i].name == fatherName){
           index=i;
           break;
         }
       }
+     
+      var sourceIndex = graph.nodes.indexOf(d);
+      var sourceObj = graph.nodes[sourceIndex];
+      var sourceLevel = sourceObj.level;
 
       // alert("index of father: " + index);
 
@@ -384,13 +383,14 @@ HTMLWidgets.widget({
           var nameNodeToAdd = imported_nodes[imported_links[j].target].name;
           var groupNodeToAdd = imported_nodes[imported_links[j].target].group;
           var toParse = '{"name":"' +nameNodeToAdd+ '", "group":"' + groupNodeToAdd + '"}';
-          toAddNodes.push(JSON.parse(toParse));
+	  var objNodeToAdd = JSON.parse(toParse);
+	  objNodeToAdd.level = sourceLevel + 1;
+          toAddNodes.push(objNodeToAdd);
 
-          var source = graph.nodes.indexOf(d);
           //alert(source);
           var target = IndNodes;
           var value = imported_links[j].value;  
-          var forparser = '{"source":' + source + ', "target":' + target + ', "value":' + value + '}';
+          var forparser = '{"source":' + sourceIndex + ', "target":' + target + ', "value":' + value + '}';
           //alert(forparser);      
           var lin = JSON.parse(forparser);
           IndNodes++;
@@ -687,10 +687,9 @@ HTMLWidgets.widget({
     }
 
     function getText(d){
-      if(d.group == cluster_group)
+      if(d.level == 0 || d.level == last_level -1)
         return d.name;
-      else
-        return (d.group + "( " + ((d.degree*100)/num_of_elem_for_group[d.group]).toFixed(2) +  "%)");
+	return (d.name + "( " + ((d.degree*100)/num_of_elem_for_group[d.group]).toFixed(2) +  "%)");
     }
 
     function collide(alpha) {
