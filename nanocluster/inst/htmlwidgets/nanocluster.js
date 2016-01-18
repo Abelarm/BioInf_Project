@@ -26,7 +26,7 @@ HTMLWidgets.widget({
   renderValue: function(el, x, force) {
   
     var options = x.options;
-    
+       
     //alert(JSON.stringify(options));
 
     // convert links and nodes data frames to d3 friendly format
@@ -62,6 +62,7 @@ HTMLWidgets.widget({
     
     var color = eval(options.colourScale);
     var linkDistance = eval(options.linkDistance);
+    
     //alert(options.linkDistance);
     //alert(linkDistance);
     var oldsvg = d3.select(el).select("svg");    
@@ -242,31 +243,38 @@ HTMLWidgets.widget({
      // add legend option
      
     drawLegend();
+    drawEdgeLegend();
      
     function drawLegend(){
+        var groupDomain = color.domain();
         if(options.legend){
             var legendRectSize = 18;
             var legendSpacing = 4;
             var colorDomain = color.domain();
             oldsvg.selectAll('.legend').remove();
             var legend = oldsvg.selectAll('.legend')
-              .data(color.domain())
+              .data(groupDomain)
               .enter()
               .append('g')
               .attr('class', 'legend')
               .attr('transform', function(d, i) {
-                var height = legendRectSize + legendSpacing;
-                var offset =  height * color.domain().length / 2;
+                var legend_height = legendRectSize + legendSpacing;
+                var offset =  legend_height* groupDomain.length / 2;
                 var horz = legendRectSize;
-                var vert = i * height+4;
+                var vert = i * legend_height+4;
+		// console.log("horz " + horz + " vert " + vert);
                 return 'translate(' + horz + ',' + vert + ')';
               });
 
             legend.append('rect')
               .attr('width', legendRectSize)
               .attr('height', legendRectSize)
-              .style('fill', color)
-              .style('stroke', color);
+	      .style('fill', function (d){
+		        return color(d);
+	          })
+	      .style('stroke', function (d){
+		        return color(d);
+	          });
 
             legend.append('text')
               .attr('x', legendRectSize + legendSpacing)
@@ -274,6 +282,58 @@ HTMLWidgets.widget({
               .text(function(d) { 
                     return d;
               });
+
+        }}
+        
+        function drawEdgeLegend(){
+        var groupDomainEdge = [];
+	groupDomainEdge.push("Positive Edges");
+	groupDomainEdge.push("Negative Edges");
+        if(options.legend){
+            var legendRectSize = 18;
+            var legendSpacing = 4;
+            var legend = oldsvg.selectAll('.edgeLegend')
+              .data(groupDomainEdge)
+              .enter()
+              .append('g')
+              .attr('class', 'edgeLegend')
+              .attr('transform', function(d, i) {
+                var legend_height = legendRectSize + legendSpacing;
+                var offset =  legend_height* groupDomainEdge.length / 2;
+                var horz = legendRectSize;
+                var vert = i * legend_height+4;
+		// console.log("horz " + width - horz + " vert " + vert);
+                return 'translate('+ (width - horz) + ',' + vert + ')';
+              });
+
+            legend.append('text')
+	    .attr('x', function(d){
+		    return (-(legendRectSize - legendSpacing))*(d.length - 4);
+	    })
+              .attr('y', legendRectSize - legendSpacing)
+              .text(function(d) { 
+                    return d;
+              });
+
+            legend.append('rect')
+              .attr('width', legendRectSize)
+              .attr('height', legendRectSize)
+	      .style('fill', function (d){
+		      if (d == "Positive Edges") {
+		      	return "#008000";
+		      }
+		      if (d == "Negative Edges") {
+		      	return "#FF0000";
+		      }
+	          })
+	      .style('stroke', function (d){
+		      if (d == "Positive Edges") {
+		      	return "#008000";
+		      }
+		      if (d == "Negative Edges") {
+		      	return "#FF0000";
+		      }
+	          });
         }
     }
 
@@ -678,7 +738,7 @@ HTMLWidgets.widget({
     function getText(d){
       if(d.level == 0 || d.level == last_level -1)
         return d.name;
-	return (d.name + "( " + ((d.degree*100)/num_of_elem_for_group[d.group]).toFixed(2) +  "%)");
+      return (d.group + "( " + ((d.degree*100)/num_of_elem_for_group[d.group]).toFixed(2) +  "%)");
     }
 
     function collide(alpha) {
