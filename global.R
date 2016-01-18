@@ -104,10 +104,10 @@ ADJ_matrix = function(W_ADJ,input,output,nano,drugs,chemical,disease,chemMat,joi
     idx_c = which(colnames(ADJ2) %in% chemical)
     idx_di = which(colnames(ADJ2) %in% disease)
     
-    V(g_clust)$type = rep("1",dim(ADJ2)[1])
-    V(g_clust)$type[idx_dr] ="3"
-    V(g_clust)$type[idx_c] ="4"
-    V(g_clust)$type[idx_di] ="2"
+    V(g_clust)$type = rep("nano",dim(ADJ2)[1])
+    V(g_clust)$type[idx_dr] ="drugs"
+    V(g_clust)$type[idx_c] ="chem"
+    V(g_clust)$type[idx_di] ="dise"
     
     message("V(g_clust)$type  ",V(g_clust)$type ,"\n")
     return(list(ADJ2=ADJ2,g_clust=g_clust))
