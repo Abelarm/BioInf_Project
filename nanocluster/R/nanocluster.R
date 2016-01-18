@@ -8,6 +8,9 @@ nanocluster <- function(Links,
                         NodeID,
                         Nodesize,
                         Group,
+			cluster_group = "nano",
+			last_level = 3,
+			groups = list("nano", "dise", "drug", "chem"),
                         height = NULL,
                         width = NULL,
                         colourScale = JS("d3.scale.category20()"),
@@ -76,11 +79,12 @@ nanocluster <- function(Links,
         opacityNoHover = opacityNoHover,
         clickAction = clickAction
   )
-  
+
+  #hardcoding just for tests 
   # create widget
   htmlwidgets::createWidget(
     name = "nanocluster",
-    x = list(links = LinksDF, nodes = NodesDF, options = options),
+    x = list(links = LinksDF, nodes = NodesDF, options = options, groups = groups, cluster_group = cluster_group, last_level = last_level),
     width = width,
     height = height,
     htmlwidgets::sizingPolicy(padding = 10, browser.fill = TRUE),
