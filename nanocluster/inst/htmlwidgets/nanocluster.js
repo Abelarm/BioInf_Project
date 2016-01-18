@@ -172,6 +172,7 @@ HTMLWidgets.widget({
         .data(graph.links)
         .enter()
         .append("g")
+	.attr("class","glink")
         .on("mouseover", LinkOver)
         .on("mouseout", LinkOut)
         .append("line")
@@ -843,6 +844,7 @@ HTMLWidgets.widget({
     function connectedNodes(d) {
 
     //console.log(linkedByIndex);
+      var glinks = d3.selectAll(".glink");
 
       if (toggle == 0) {
           //Reduce the opacity of all but the neighbouring nodes
@@ -856,11 +858,15 @@ HTMLWidgets.widget({
           
           //Reduce the op
           toggle = 1;
+	  glinks.on("mouseover", null);
+	  glinks.on("mouseout", null);
       } else {
           //Put them back to opacity=1
           gnodes.select("circle").style("opacity", 1);
           link.style("opacity", options.opacity/2);
           toggle = 0;
+	  glinks.on("mouseover", LinkOver);
+	  glinks.on("mouseout", LinkOut);
       }
 
   }
