@@ -405,48 +405,34 @@ HTMLWidgets.widget({
       restartAdd();
     }
 
-    function addTrueNode(d,type){
-      // alert("Entrato nella funzione addTrueNode, chiamato da: " + d.name);
-      var fatherName = fatherOf[d.name];
-      // alert(JSON.stringify(fathers));
+    function addTrueNode(d){
       // repopulated at the end 
       openedNodes[d.name] = [];
       // alert(father);
-
-      var index;
-      for(i =0; i<imported_nodes.length; ++i){
-        if(imported_nodes[i].name == fatherName){
-          index=i;
-          break;
-        }
-      }
      
       var sourceIndex = graph.nodes.indexOf(d);
       var sourceObj = graph.nodes[sourceIndex];
-      var sourceLevel = sourceObj.level;
-
-      // alert("index of father: " + index);
+      var sourceSubClass = sourceObj.subclass;
 
       var toAddLink = [];
       var toAddNodes = [];
       var IndNodes = graph.nodes.length;
-      //alert("LEN FULL GRAPH LINKS: " + FullGraph.links.source.length)
 
       var numlin = 0;
-      for(j=0; j<imported_links.length; ++j){
-        if ((imported_links[j].source == index) && (imported_nodes[imported_links[j].target].group == type)){
+      //primo ciclo: individuare tutti i nodi di una certa subclass ed azzeccarli al padre
+      for(j=0; j<imported_nodes.length; ++j){
+        if(imported_nodes[j].subclass == sourceSubClass){
           //alert("Aggiungo");
           //alert(FullGraph.links.source[j] + " " + FullGraph.links.target[j]);
-          var nameNodeToAdd = imported_nodes[imported_links[j].target].name;
-          var groupNodeToAdd = imported_nodes[imported_links[j].target].group;
-          var toParse = '{"name":"' +nameNodeToAdd+ '", "group":"' + groupNodeToAdd + '"}';
+          var nameNodeToAdd = imported_nodes[j].name;
+          var groupNodeToAdd = imported_nodes[j].group;
+          var toParse = '{"name":"' +nameNodeToAdd+ '", "group":"' + groupNodeToAdd + '", "subclass":"' + nameNodeToAdd +'"}';
 	  var objNodeToAdd = JSON.parse(toParse);
-	  objNodeToAdd.level = sourceLevel + 1;
           toAddNodes.push(objNodeToAdd);
 
           //alert(source);
           var target = IndNodes;
-          var value = imported_links[j].value;  
+          var value = 1;  
           var forparser = '{"source":' + sourceIndex + ', "target":' + target + ', "value":' + value + '}';
           //alert(forparser);      
           var lin = JSON.parse(forparser);
@@ -455,12 +441,15 @@ HTMLWidgets.widget({
         }
       }
 
+
       // alert("---------------NUMERO NODI: " + numlin);
 
       // alert(toAddLink.length);
       // alert(toAddNodes.length);
 
       openedNodes[d.name].push.apply(openedNodes[d.name],toAddLink);
+
+      // console.log(toAddNodes);
 
       graph.nodes.push.apply(graph.nodes,toAddNodes);
       graph.links.push.apply(graph.links,toAddLink);
@@ -724,6 +713,7 @@ HTMLWidgets.widget({
     }
 
     function getText(d){
+      //super trick: negli ultimi nodi la subclass e' uguale al nome
       return d.subclass;
     }
 
