@@ -26,13 +26,24 @@ HTMLWidgets.widget({
   renderValue: function(el, x, force) {
   
     var options = x.options;
-    
+       
     //alert(JSON.stringify(options));
 
     // convert links and nodes data frames to d3 friendly format
     var imported_links = HTMLWidgets.dataframeToD3(x.links);
     var imported_nodes = HTMLWidgets.dataframeToD3(x.nodes);
     
+    //groups are strings 
+    //same cluster_group
+    var groups = x.groups;
+    var cluster_group = x.cluster_group;
+    var num_of_elem_for_group = {};
+    var last_level = x.last_level;
+    var num_gerarchies = last_level - 1;
+
+    for (var i = 0, len = groups.length; i < len; i++) {
+      num_of_elem_for_group[groups[i]] = 0;  
+    }
     //alert("links: " + JSON.stringify(imported_links));
     //alert("nodes: " + JSON.stringify(imported_nodes));
 
@@ -43,75 +54,66 @@ HTMLWidgets.widget({
     var maxdim = 20;
     var defaultdim = 5;
     var stroke_width = 2;
+    
+    //useful for collision
     var padding = 2;
 
     var force = force;
     
     var color = eval(options.colourScale);
+    var linkDistance = eval(options.linkDistance);
     
-    var svg = d3.select(el).select("svg");    
-    var width = el.offsetWidth;
-    var height = el.offsetHeight;
+    //alert(options.linkDistance);
+    //alert(linkDistance);
+    var oldsvg = d3.select(el).select("svg");    
 
+    var toggle = 0;
     var link,node,gnodes;
-    var openedNode = {};
+    var fatherOf = {};
+    var sons = {};
+    var openedNodes = {};
+    var linkedByIndex = {};
+    var indexMap = {};
     var numChem=0,numDrug=0,numDise=0;
 
-    graph = JSON.parse('{"nodes":[], "links":[]}');
+    var graph = JSON.parse('{"nodes":[], "links":[]}');
     
-    nod_len = imported_nodes.length;
+    var nod_len = imported_nodes.length;
     for (index = 0; index < nod_len; ++index) {
-      nd = imported_nodes[index];
-      if (nd.group==1){
+      var nd = imported_nodes[index];
+      if (nd.group==cluster_group){
+        //alert("Sto aggiungendo: " + index);
+        indexMap[index] = graph.nodes.length; 
+        nd.level = 0;
         graph.nodes.push(nd);
-      }else{
-        if(nd.group==2){
-          numDise++;
-        }else{
-          if(nd.group==3){
-            numDrug++;
-          }else{
-            numChem++;
-          }
-        }
+        linkedByIndex[graph.nodes.length + "," + graph.nodes.length] = 1;
       }
+      num_of_elem_for_group[nd.group] += 1;
     }
 
     for (var i = 0; i < imported_links.length; i++) {
       ln = imported_links[i];
-      if((ln.source<=28) && ((ln.target<=28))){
-        graph.links.push(ln);
-        //alert("from imported: source: " + ln.source + " target: " + ln.target);
-        //alert("from pushed: source: " + graph.links[i].source + " target: " + graph.links[i].target);
+      
+      if((imported_nodes[ln.source].group == cluster_group) && ((imported_nodes[ln.target].group == cluster_group))){
+        newln = JSON.parse(JSON.stringify(ln));
+        newln.source = indexMap[ln.source]; 
+        newln.target = indexMap[ln.target];
+        graph.links.push(newln);
+        linkedByIndex[newln.source + "," + newln.target] = 1;
       }
     }
     
-    // alert(numDrug);
-    // alert(numChem);
-    // alert(numDise);
-    //alert(nodi);
-    //alert(linki);
-    
     //END DATA PARSING
-    
-    
-
-    //graph.nodes = nodi;
-    //graph.links = linki;
-    
-    //alert("graph.links " + JSON.stringify(graph.links));
-    //alert("graph.nodes " + JSON.stringify(graph.nodes));
     
     //BEGIN RENDERING
     
     var zoom = d3.behavior.zoom();
-
     
     force
       .nodes(graph.nodes)
       .links(graph.links)
       .charge(options.charge)
-      .linkDistance(options.linkDistance)
+      .linkDistance(linkDistance)
       .friction(0.95)
       .size([width, height])
       .on("tick", tickfunction)
@@ -120,16 +122,30 @@ HTMLWidgets.widget({
       
     var drag = force.drag()
         .on("dragstart", dragstart)
-      // allow force drag to work with pan/zoom drag
-      function dragstart(d) {
-        d3.event.sourceEvent.preventDefault();
-        d3.event.sourceEvent.stopPropagation();
-      }
+        .on("dragend", dragend);
+    
+    // allow force drag to work with pan/zoom drag
+    function dragstart(d) {
+      d3.event.sourceEvent.preventDefault();
+      d3.event.sourceEvent.stopPropagation();
+      force.stop();
+    }
+    
+    function dragend(d){
+      d.fixed = true;
+      force.resume();
+    }
       
-     svg = svg
+    // select the svg element and remove existing children
+    // Needed, otherwise when redrawed with Shiny the old graph isn't eliminated
+    oldsvg.selectAll("*").remove();
+      
+    var svg = oldsvg
         .append("g").attr("class","zoom-layer")
-        .append("g")
-        
+        .append("g");
+    
+    //svg.on("dblclick.zoom", null);
+  
     // add zooming if requested
     if (options.zoom) {
       function redraw() {
@@ -141,7 +157,7 @@ HTMLWidgets.widget({
       zoom.on("zoom", redraw);
       d3.select(el).select("svg")
       .attr("pointer-events", "all")
-      .call(zoom);
+      .call(zoom).on("dblclick.zoom", null);
     }
     else {
       zoom.on("zoom", null);
@@ -149,22 +165,18 @@ HTMLWidgets.widget({
 
 
     
-    
+    //FIRST DRAWING, ONLY CLUSTERS AND LINK BETWEEN THEM 
 
     //draw links
     link = svg.selectAll(".link")
         .data(graph.links)
         .enter()
+        .append("g")
+	.attr("class","glink")
+        .on("mouseover", LinkOver)
+        .on("mouseout", LinkOut)
         .append("line")
         .attr("class", "link")
-        .on("mouseover", function(d) {
-            d3.select(this)
-              .style("opacity", options.opacity);
-        })
-        .on("mouseout", function(d) {
-            d3.select(this)
-              .style("opacity", options.opacity/2);
-        })
         .style("opacity",options.opacity/2)
         .style("stroke-width", function(d) { return Math.abs(d.value); })
         .style("stroke",function(d){
@@ -185,7 +197,8 @@ HTMLWidgets.widget({
             .on("mouseover",mouseover)
             .on("mouseout",mouseout)
             .style("stroke",'#fff')
-            .style("stroke-width", "1.5px");
+            .style("stroke-width", "1.5px")
+            .call(drag);
 
 
     node = gnodes
@@ -193,61 +206,142 @@ HTMLWidgets.widget({
         .attr("class","node")
         .attr("r", maxdim)
         .style("fill", function(d) { return color(d.group); })
-        .on("click", function(d){
-          //alert("Ho cliccato " + d.name + " vaffanculo Dario Greco");
-          if (! (d.name in openedNode)){
-                  openedNode[d.name] = [];
-                  addNodes(d);
-                  return;
+        .on("dblclick", function(d){
+          if (!(d.name in openedNodes)){
+            if(d.level < num_gerarchies - 1){
+              openedNodes[d.name] = [];
+              addNodes(d);
+              return;
+            }
+            else{
+              addTrueNode(d, d.group);
+	      return;
+            }
           }
           else{
-            if (("ChemOf"+d.name) in openedNode){
-              name = "ChemOf"+d.name;
-              for(i =0; i<graph.nodes.length; ++i){
-                if(graph.nodes[i].name = name){
-                  //alert("Rimuovo "+name);
-                  removeNodes(graph.nodes[i]);
-                  //alert("-------FATTO-------");
-                  break;
-                }
-              }
-
-            }
-            if (("PharOf"+d.name) in openedNode){
-              name = "PharOf"+d.name;
-              for(i =0; i<graph.nodes.length; ++i){
-                if(graph.nodes[i].name = name){
-                  //alert("Rimuovo "+name);
-                  removeNodes(graph.nodes[i]);
-                  //alert("-------FATTO-------");
-                  break;
-                }
-              }
-            }
-            if (("DiseOf"+d.name) in openedNode){
-              name = "DiseOf"+d.name;
-              for(i =0; i<graph.nodes.length; ++i){
-                if(graph.nodes[i].name = name){
-                  //alert("Rimuovo "+name);
-                  removeNodes(graph.nodes[i]);
-                  //alert("-------FATTO-------");
-                  break;
-                }
-              }
-            }
+	    //d.name is in openedNodes
             removeNodes(d);
             return;
           }
         })
+        .on("click", function(d){
+           var event = d3.event;
+           var ctrlPressed = event.ctrlKey;
+           var shiftPressed = event.shiftKey;
+           if(shiftPressed){
+            connectedNodes(d);
+           }
+           else if (ctrlPressed) {
+            if (d.fixed) {
+             d.fixed = false; 
+            } 
+           }
+          }
+        )
         .style("stroke", '#fff')
         .style("stroke-width", 1);
         
+     // add legend option
+     
+    drawLegend();
+    drawEdgeLegend();
+     
+    function drawLegend(){
+        var groupDomain = color.domain();
+        if(options.legend){
+            var legendRectSize = 18;
+            var legendSpacing = 4;
+            var colorDomain = color.domain();
+            oldsvg.selectAll('.legend').remove();
+            var legend = oldsvg.selectAll('.legend')
+              .data(groupDomain)
+              .enter()
+              .append('g')
+              .attr('class', 'legend')
+              .attr('transform', function(d, i) {
+                var legend_height = legendRectSize + legendSpacing;
+                var offset =  legend_height* groupDomain.length / 2;
+                var horz = legendRectSize;
+                var vert = i * legend_height+4;
+		// console.log("horz " + horz + " vert " + vert);
+                return 'translate(' + horz + ',' + vert + ')';
+              });
+
+            legend.append('rect')
+              .attr('width', legendRectSize)
+              .attr('height', legendRectSize)
+	      .style('fill', function (d){
+		        return color(d);
+	          })
+	      .style('stroke', function (d){
+		        return color(d);
+	          });
+
+            legend.append('text')
+              .attr('x', legendRectSize + legendSpacing)
+              .attr('y', legendRectSize - legendSpacing)
+              .text(function(d) { 
+                    return d;
+              });
+
+        }}
+        
+        function drawEdgeLegend(){
+        var groupDomainEdge = [];
+	groupDomainEdge.push("Positive Edges");
+	groupDomainEdge.push("Negative Edges");
+        if(options.legend){
+            var legendRectSize = 18;
+            var legendSpacing = 4;
+            var legend = oldsvg.selectAll('.edgeLegend')
+              .data(groupDomainEdge)
+              .enter()
+              .append('g')
+              .attr('class', 'edgeLegend')
+              .attr('transform', function(d, i) {
+                var legend_height = legendRectSize + legendSpacing;
+                var offset =  legend_height* groupDomainEdge.length / 2;
+                var horz = legendRectSize;
+                var vert = i * legend_height+4;
+		// console.log("horz " + width - horz + " vert " + vert);
+                return 'translate('+ (width - horz) + ',' + vert + ')';
+              });
+
+            legend.append('text')
+	    .attr('x', function(d){
+		    return (-(legendRectSize - legendSpacing))*(d.length - 4);
+	    })
+              .attr('y', legendRectSize - legendSpacing)
+              .text(function(d) { 
+                    return d;
+              });
+
+            legend.append('rect')
+              .attr('width', legendRectSize)
+              .attr('height', legendRectSize)
+	      .style('fill', function (d){
+		      if (d == "Positive Edges") {
+		      	return "#008000";
+		      }
+		      if (d == "Negative Edges") {
+		      	return "#FF0000";
+		      }
+	          })
+	      .style('stroke', function (d){
+		      if (d == "Positive Edges") {
+		      	return "#008000";
+		      }
+		      if (d == "Negative Edges") {
+		      	return "#FF0000";
+		      }
+	          });
+        }
+    }
 
     //alert(gnodes);
     //alert(node);
     
     //END RENDER, SUPPORT FUNCTIONS HERE
-     
     function tickfunction() {
       //alert("entro");
       link.attr("x1", function(d) { return d.source.x; })
@@ -291,137 +385,74 @@ HTMLWidgets.widget({
       
       
     function addNodes(d){ //ok!
-      //alert(JSON.stringify(d));
-
-      //d.append("Opened","True");
-      
-      //alert("Num Archi prima: " + graph.links.length);
-      
-      chem = JSON.parse(JSON.stringify(d));
-      chem.name = "ChemOf"+d.name;
-      chem.group = 4;
-      chemdegree = countDegree(d,chem.group);
-      chem.degree = chemdegree;
-      chem.dim = Math.floor(chemdegree/6);
-      //alert("Degree: "+chemdegree + " Dim: " + chem.dim);
-
-      phar = JSON.parse(JSON.stringify(d));
-      phar.name = "PharOf"+d.name;
-      phar.group = 3;
-      phardegree = countDegree(d,phar.group);
-      //alert("---------------------"+ (numDrug/phardegree));
-      phar.degree = phardegree;
-      phar.dim = Math.floor(phardegree/6);
-      //alert("Degree: " +phardegree + " Dim: " + phar.dim);
-
-      dise = JSON.parse(JSON.stringify(d));
-      dise.name = "DiseOf"+d.name;
-      dise.group = 2;
-      disedegree = countDegree(d,dise.group);
-      dise.degree = disedegree;
-      dise.dim = Math.floor(disedegree/6);
-      //alert("Degree: "+disedegree + " Dim: " + dise.dim);
-      graph.nodes.push(chem);
-      
-      //openedNode[d.name].push(chem);
-      graph.nodes.push(phar);
-      
-      //openedNode[d.name].push(phar);
-      graph.nodes.push(dise);
-      //openedNode[d.name].push(dise);
-    
-      //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(chem));
-      lin1 = JSON.parse('{"source":' +  graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(chem) + ', "value": 1}');
-      graph.links.push(lin1);
-      openedNode[d.name].push(lin1);
-      //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(phar));
-      lin2 = JSON.parse('{"source":' + graph.nodes.indexOf(d)+ ', "target": ' + graph.nodes.indexOf(phar) + ', "value": 1}');
-      graph.links.push(lin2);
-      openedNode[d.name].push(lin2);
-      //alert("aggiungo arco tra source = " + nodi.indexOf(d) + "e target = " + nodi.indexOf(dise));
-      lin3 = JSON.parse('{"source":' + graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(dise) + ', "value": 1}');
-      graph.links.push(lin3);
-      openedNode[d.name].push(lin3);
-      
-      //alert("Num Archi dopo: " + graph.links.length);
-
-      //alert(graph.nodes);
-      //alert(graph.links);
-
+      sons[d.name] = [];
+      for (var i = 0, len = groups.length; i < len; i++) {
+        if(!(groups[i] == cluster_group)){
+          var toAdd = JSON.parse(JSON.stringify(d));
+          toAdd.name = groups[i]+"Of"+d.name;
+          toAdd.group = groups[i];
+          toAdd.fixed = false;
+          toAdd.level = d.level + 1;
+          toAdd.degree = countDegree(d, toAdd.group);
+          toAdd.dim = Math.floor(toAdd.degree);
+          if(!(toAdd.degree == 0)){
+            graph.nodes.push(toAdd);
+            var lin = JSON.parse('{"source":' +  graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(toAdd) + ', "value": 1}');
+            graph.links.push(lin);
+            openedNodes[d.name].push(lin);
+            fatherOf[toAdd.name] = d.name;
+	    sons[d.name].push(toAdd);
+          }
+        }
+      }
       restartAdd();
     }
 
     function addTrueNode(d,type){
       // alert("Entrato nella funzione addTrueNode, chiamato da: " + d.name);
-      fathers = Object.keys(openedNode);
+      var fatherName = fatherOf[d.name];
       // alert(JSON.stringify(fathers));
-      var father;
-
-      for(index = 0; index < fathers.length; ++index){
-
-        f = fathers[index];
-        fullname = "PharOf" + f;
-        // alert(fullname);
-        // alert(d.name.indexOf("DiseOf"+f));
-        // alert(d.name.indexOf("ChemOf"+f));
-        // alert(d.name.indexOf("PharOf"+f));
-        if (d.name.indexOf("ChemOf"+f) == 0){
-          father = f;
-          // alert(father);
-          break;
-
-        }
-        if(d.name.indexOf("DiseOf"+f) == 0){
-          father = f;
-          // alert(father);
-          break;
-        }
-        if(d.name.indexOf("PharOf"+f) == 0){
-          father = f;
-          // alert(father);
-          break;
-        }
-          
-      }
-      openedNode[d.name] = [];
+      // repopulated at the end 
+      openedNodes[d.name] = [];
       // alert(father);
 
       var index;
       for(i =0; i<imported_nodes.length; ++i){
-
-          if(imported_nodes[i].name.indexOf(father) == 0){
-            index=i;
-            break;
-          }
+        if(imported_nodes[i].name == fatherName){
+          index=i;
+          break;
+        }
       }
+     
+      var sourceIndex = graph.nodes.indexOf(d);
+      var sourceObj = graph.nodes[sourceIndex];
+      var sourceLevel = sourceObj.level;
 
       // alert("index of father: " + index);
 
-      toAddLink = [];
-      toAddNodes = [];
-      IndNodes = graph.nodes.length;
+      var toAddLink = [];
+      var toAddNodes = [];
+      var IndNodes = graph.nodes.length;
       //alert("LEN FULL GRAPH LINKS: " + FullGraph.links.source.length)
 
       var numlin = 0;
       for(j=0; j<imported_links.length; ++j){
-
-
         if ((imported_links[j].source == index) && (imported_nodes[imported_links[j].target].group == type)){
-          
           //alert("Aggiungo");
           //alert(FullGraph.links.source[j] + " " + FullGraph.links.target[j]);
-          nameNodeToAdd = imported_nodes[imported_links[j].target].name;
-          groupNodeToAdd = imported_nodes[imported_links[j].target].group;
-          toParse = '{"name":"' +nameNodeToAdd+ '", "group":' + groupNodeToAdd + '}';
-          toAddNodes.push(JSON.parse(toParse));
+          var nameNodeToAdd = imported_nodes[imported_links[j].target].name;
+          var groupNodeToAdd = imported_nodes[imported_links[j].target].group;
+          var toParse = '{"name":"' +nameNodeToAdd+ '", "group":"' + groupNodeToAdd + '"}';
+	  var objNodeToAdd = JSON.parse(toParse);
+	  objNodeToAdd.level = sourceLevel + 1;
+          toAddNodes.push(objNodeToAdd);
 
-          source = graph.nodes.indexOf(d);
           //alert(source);
-          target = IndNodes;
-          value = imported_links[j].value;  
-          forparser = '{"source":' + source + ', "target":' + target + ', "value":' + value + '}';
+          var target = IndNodes;
+          var value = imported_links[j].value;  
+          var forparser = '{"source":' + sourceIndex + ', "target":' + target + ', "value":' + value + '}';
           //alert(forparser);      
-          lin = JSON.parse(forparser);
+          var lin = JSON.parse(forparser);
           IndNodes++;
           toAddLink.push(lin);
         }
@@ -432,7 +463,7 @@ HTMLWidgets.widget({
       // alert(toAddLink.length);
       // alert(toAddNodes.length);
 
-      openedNode[d.name].push.apply(openedNode[d.name],toAddLink);
+      openedNodes[d.name].push.apply(openedNodes[d.name],toAddLink);
 
       graph.nodes.push.apply(graph.nodes,toAddNodes);
       graph.links.push.apply(graph.links,toAddLink);
@@ -443,11 +474,15 @@ HTMLWidgets.widget({
 
     function removeNodes(d){
 
-      //alert("Lunghezza link prima removeNodes:"+ link.data().length);
-      //alert("Lunghezza node prima removeNodes:"+ node.data().length);
-
-      toremove = openedNode[d.name];
-      //alert(toremove.length);
+      var toremove = openedNodes[d.name];
+      
+      if(d.name in sons){
+	for (var i = 0, len = sons[d.name].length; i < len; i++) {
+	  if (sons[d.name][i].name in openedNodes) {
+	    removeNodes(sons[d.name][i]);
+	  }	
+        }
+      }
 
       toremove.forEach(function(link) {
 
@@ -456,14 +491,10 @@ HTMLWidgets.widget({
 
       });
 
-      delete openedNode[d.name];
-
-      //alert("Lunghezza link dopo removeNodes:"+ graph.links.length);
-      //alert("Lunghezza node dopo removeNodes:"+ graph.nodes.length);
-      
+      delete openedNodes[d.name];
+      delete sons[d.name];
 
       restartRemove();
-
     }
 
     function restartAdd(){
@@ -487,7 +518,16 @@ HTMLWidgets.widget({
               .style("opacity", options.opacity / 2);
         })
         .style("opacity", options.opacity / 2)
-        .style("stroke", "#000")
+        .style("stroke",function(d){
+          if(d.value == 1){
+            return "#000000";
+          }
+          if(d.value>0){
+            return "#008000";
+          }else{
+            return "#FF0000";
+          }
+        })
         .style("stroke-width", function(d) { return stroke_width; });
 
       //alert("Lunghezza link dopo restart:"+  link.data().length);
@@ -511,48 +551,34 @@ HTMLWidgets.widget({
           //alert(d);
           return color(d.group); 
         })
-        .on("click",function(d){
-
-          //alert("clicked "+ d.name);
-          //alert("openedNode " + openedNode[d.name]);
-
-          if (d.name.indexOf("ChemOf") > -1){
-
-              if (!(d.name in openedNode) || openedNode[d.name] == 0){
-                // alert("Inserisco nodi di: "+ d.name);
-                addTrueNode(d,4);
-                return;
-              }else{
-                //alert("Rimuovo nodi di: "+ d.name);
-                removeNodes(d);
-                return;
-              }
+        .on("click", function(d){
+           var event = d3.event;
+           ctrlPressed =event.ctrlKey;
+           if (ctrlPressed) {
+            if (d.fixed) {
+             d.fixed = false; 
+            } 
+           }
           }
-          if (d.name.indexOf("PharOf") > -1){
-
-              if (! (d.name in openedNode) || openedNode[d.name] == 0 ){
-                // alert("Inserisco nodi di: "+ d.name);
-                addTrueNode(d,3);
-                return;
-              }else{
-               //alert("Rimuovo nodi di: "+ d.name);
-                removeNodes(d);
-                return;
-              }
+        )
+        .on("dblclick",function(d){
+          if (!(d.name in openedNodes)){
+            if(d.level < num_gerarchies - 1){
+              openedNodes[d.name] = [];
+              addNodes(d);
+              return;
+            }
+            else{
+              addTrueNode(d, d.group);
+            }
           }
-          if (d.name.indexOf("DiseOf") > -1){
-            
-            if (! (d.name in openedNode) || openedNode[d.name] == 0 ){
-                // alert("Inserisco nodi di: "+ d.name);
-                addTrueNode(d,2);
-                return;
-              }else{
-                //alert("Rimuovo nodi di: "+ d.name);
-                removeNodes(d);
-                return;
-              }
+          else{
+	    //d.name is in openedNodes
+            removeNodes(d);
+            return;
           }
-        });
+        })
+        .call(drag);
 
      for (i = 0; i < wrongnode[0].length; i++) {
         nd = wrongnode[0][i];
@@ -571,6 +597,7 @@ HTMLWidgets.widget({
       //alert(node.data());
 
       //alert("Lunghezza node dopo restart:"+ node.data().length);
+      drawLegend();
       force.stop();
       force.start();
     }
@@ -609,6 +636,7 @@ HTMLWidgets.widget({
 
 
       //alert("Lunghezza node dopo restart:"+ node.data().length);
+      drawLegend();
       force.stop();
       force.start();
 
@@ -616,24 +644,23 @@ HTMLWidgets.widget({
 
     function countDegree(d,type){//OK
     //alert("in countDegree"); OK
-
+      //founding node...
+      var index = -1;
       for(i =0; i<imported_nodes.length; ++i){
-
           if(imported_nodes[i].name == d.name){
             index=i;
             //alert("found " + d.name + " at index " + i); OK
             break;
           }
       }
-      degree =0;
+      //once founded, count degree by iterating on edges
+      var degree = 0;
       for(j=0; j<imported_links.length; ++j){
 
         if ((imported_links[j].source == index) && (imported_nodes[imported_links[j].target].group == type))
           degree++;
       }
-
       return degree;
-
     }
 
     function mouseover() {
@@ -677,21 +704,7 @@ HTMLWidgets.widget({
         d3.select(this).select("circle").transition()
           .duration(750)
           .attr("r", function(d){
-            //alert(nodeSize(d));
-            if(d.group!=1){
-              if (d.name.indexOf("ChemOf") > -1){
-                  return nodeSize(d);
-              }
-              if (d.name.indexOf("PharOf") > -1){
-                  return nodeSize(d);
-              }
-              if (d.name.indexOf("DiseOf") > -1){
-                  return nodeSize(d);
-              }
-              return nodeSize(d)+5;
-            }else{
-              return nodeSize(d);
-            }
+            return nodeSize(d);
           });
         //alert(d3.select(this).select("text"));
         d3.select(this).select("text")
@@ -704,7 +717,6 @@ HTMLWidgets.widget({
       }
 
     function nodeSize(d){
-      //alert(d);
       if ("dim" in d){
         if (d.dim < maxdim){
           if (d.dim < defaultdim){
@@ -716,7 +728,7 @@ HTMLWidgets.widget({
           return (maxdim-2);
         }
       }else{
-        if (d.group==1){
+        if (d.group==cluster_group){
           return maxdim;
         }else{
           return defaultdim;
@@ -725,23 +737,15 @@ HTMLWidgets.widget({
     }
 
     function getText(d){
-      name = d.name;
-      if (d.name.indexOf("ChemOf") > -1){
-        return "Chemical ("+ ((d.degree*100)/numChem).toFixed(2) +"%)";
-      }
-      if (d.name.indexOf("PharOf") > -1){
-        return "Drug ("+ ((d.degree*100)/numDrug).toFixed(2) +"%)";
-      }
-      if (d.name.indexOf("DiseOf") > -1){
-        return "Disease ("+ ((d.degree*100)/numDise).toFixed(2) +"%)";
-      }
-      return d.name;
+      if(d.level == 0 || d.level == last_level -1)
+        return d.name;
+      return (d.group + "( " + ((d.degree*100)/num_of_elem_for_group[d.group]).toFixed(2) +  "%)");
     }
 
     function collide(alpha) {
       var quadtree = d3.geom.quadtree(graph.nodes);
       return function(d) {
-        var rb = 2*d.r + padding,
+        var rb = 2*this.r.baseVal.value + padding,
             nx1 = d.x - rb,
             nx2 = d.x + rb,
             ny1 = d.y - rb,
@@ -762,7 +766,115 @@ HTMLWidgets.widget({
           return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
         });
       };
-    }    
+    }
+    
+    function LinkOver(){
+
+    l = d3.select(this);
+
+    l.select(".link")
+            .style("opacity", options.opacity);
+
+    l.select(".link").transition()
+        .duration(750);
+      //console.log(d3.select(this).select("text"));
+
+
+      //console.log(l.select("text")[0]);
+
+      l.append('svg:text')
+        .text(function(d) { return (d.value).toFixed(2); })
+        .style("fill",function(d){
+          if(d.value>0){
+            return "#008000";
+          }else{
+            return "#FF0000";
+          }
+         })
+        .style("stroke-width", ".5px")
+        .style("stroke","#fff")
+        .style("font", options.fontSize + "px " + options.fontFamily)
+        .transition()
+          .duration(750)
+          .attr("x",33)
+          .attr("class", "nodetext")
+          .attr("dx", 12)
+          .attr("dy", ".35em")
+        .style("opacity", 1)
+        .style("pointer-events", "none")
+        .style("font", options.clickTextSize + "px ")
+        .attr("x", function (d) {
+              x1 = d.source.x;
+              //console.log(x1);
+              x2 = d.target.x;
+              //console.log(x2);
+              ris = (x1+x2)/2;
+              //console.log(ris)
+              return ris;
+        })
+        .attr("y", function (d) {
+              y1 = d.source.y;
+              //console.log(y1);
+              y2 = d.target.y;
+              //console.log(y2);
+              ris = (y1+y2)/2;
+              //console.log(ris);
+              return ris;
+        
+        });
+    }
+
+    function LinkOut(){
+      l = d3.select(this);
+
+      l.select(".link") 
+              .style("opacity", options.opacity/2);
+
+
+      //console.log(l.select("text")[0]);
+
+      if (l.select("text")[0][0] != null){
+
+        l.select("text").remove();
+        return;
+
+      }
+    }  
+    
+    function connectedNodes(d) {
+
+    //console.log(linkedByIndex);
+      var glinks = d3.selectAll(".glink");
+
+      if (toggle == 0) {
+          //Reduce the opacity of all but the neighbouring nodes
+          //console.log(d);
+          gnodes.select("circle").style("opacity", function (o) {
+              return neighboring(d, o) | neighboring(o, d) ? 1 : 0.1;
+          });
+          link.style("opacity", function (o) {
+              return d.index==o.source.index | d.index==o.target.index ? 1 : 0.1;
+          });
+          
+          //Reduce the op
+          toggle = 1;
+	  glinks.on("mouseover", null);
+	  glinks.on("mouseout", null);
+      } else {
+          //Put them back to opacity=1
+          gnodes.select("circle").style("opacity", 1);
+          link.style("opacity", options.opacity/2);
+          toggle = 0;
+	  glinks.on("mouseover", LinkOver);
+	  glinks.on("mouseout", LinkOut);
+      }
+
+  }
+
+  function neighboring(a, b) {
+    //console.log("Source: " + a.index + " Target: " + b.index)
+      return linkedByIndex[a.index + "," + b.index];
+  }  
     
   }//end render
 }) //end htmlwidget

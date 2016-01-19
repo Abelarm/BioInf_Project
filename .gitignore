@@ -1,6 +1,8 @@
 *.json
 .Rhistory
 *~
+.RData
+.Rproj.user
+*.html
 www/
 *.swp
-.RData
