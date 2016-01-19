@@ -8,9 +8,11 @@ graphexplorer <- function(Links,
                         NodeID,
                         Nodesize,
                         Group,
+                        Subclass = "subclass",
                         height = NULL,
                         width = NULL,
                         colourScale = JS("d3.scale.category20()"),
+                        groups = list("nano", "drug", "chem", "dise"),
                         fontSize = 7,
                         fontFamily = "serif",
                         linkDistance = 50,
@@ -48,8 +50,8 @@ graphexplorer <- function(Links,
     names(NodesDF) <- c("name", "group", "nodesize")
     nodesize = TRUE
   }else{
-    NodesDF <- data.frame(Nodes[, NodeID], Nodes[, Group])
-    names(NodesDF) <- c("name", "group")
+    NodesDF <- data.frame(Nodes[, NodeID], Nodes[, Group], Nodes[, Subclass])
+    names(NodesDF) <- c("name", "group", "subclass")
     nodesize = FALSE
   }
   LinksDF <- data.frame(LinksDF, colour=linkColour)
@@ -80,7 +82,7 @@ graphexplorer <- function(Links,
   # create widget
   htmlwidgets::createWidget(
     name = "graphexplorer",
-    x = list(links = LinksDF, nodes = NodesDF, options = options),
+    x = list(links = LinksDF, nodes = NodesDF, options = options, groups = groups),
     width = width,
     height = height,
     htmlwidgets::sizingPolicy(padding = 10, browser.fill = TRUE),
