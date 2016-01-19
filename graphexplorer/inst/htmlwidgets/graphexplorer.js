@@ -26,8 +26,6 @@ HTMLWidgets.widget({
   renderValue: function(el, x, force) {
   
     var options = x.options;
-       
-    //alert(JSON.stringify(options));
 
     // convert links and nodes data frames to d3 friendly format
     var imported_links = HTMLWidgets.dataframeToD3(x.links);
@@ -37,8 +35,6 @@ HTMLWidgets.widget({
     //same cluster_group
     var groups = x.groups;
     var num_of_elem_for_group = {};
-    var last_level = x.last_level;
-    var num_gerarchies = last_level - 1;
 
     for (var i = 0, len = groups.length; i < len; i++) {
       num_of_elem_for_group[groups[i]] = 0;  
@@ -73,18 +69,37 @@ HTMLWidgets.widget({
     var openedNodes = {};
     var linkedByIndex = {};
     var indexMap = {};
+    var subCategories = {};
 
     var graph = JSON.parse('{"nodes":[], "links":[]}');
+
+    for (var i = 0, len = imported_nodes.length; i < len; i++) {
+    	var actual_group = imported_nodes[i].group;
+	var actual_sub_groups = (imported_nodes[i].subclass).split(";");
+	
+	for (var j = 0, jlen = actual_sub_groups.length; j < jlen; j++) {
+	  var actual_sub_group = actual_sub_groups[j];
+	  if (!(actual_group in subCategories)) {
+	    subCategories[actual_group] = {};
+	  }
+	  if (actual_sub_group == "NC") {
+	    continue;
+	  }
+          if(!(actual_sub_group in subCategories[actual_group])){
+            subCategories[actual_group][actual_sub_group] = actual_sub_group; 
+          }
+	}
+    }
     
     for (var i = 0, len = groups.length; i < len; i++) {
-    	var nodeToAdd = '{"name":" '+ group[i] + '","group":"' + group[i] + '"}';
+    	var nodeToAdd = '{"name":" '+ groups[i] + '","group":"' + groups[i] +'", "subclass": "' + groups[i] + '"}';
 	graph.nodes.push(JSON.parse(nodeToAdd));
     }
 
     for (var i = 0, len = groups.length; i < len-1; i++) {
 	    for (var j = i+1; j < len; j++) {
-	    	var edgeToAdd = '{"source": ' + graph.nodes[i] + ', "target": ' + graph.nodes[j] + ',"value":1}';	
-		graph.edges.push(JSON.parse(edgeToAdd));
+	    	var edgeToAdd = '{"source": ' + i + ', "target": ' + j + ',"value":1}';	
+		graph.links.push(JSON.parse(edgeToAdd));
 	    }
     }
     
@@ -150,7 +165,7 @@ HTMLWidgets.widget({
 
 
     
-    //FIRST DRAWING, ONLY CLUSTERS AND LINK BETWEEN THEM 
+    //FIRST DRAWING, ONLY GROUPS AND LINK BETWEEN THEM 
 
     //draw links
     link = svg.selectAll(".link")
@@ -193,13 +208,13 @@ HTMLWidgets.widget({
         .style("fill", function(d) { return color(d.group); })
         .on("dblclick", function(d){
           if (!(d.name in openedNodes)){
-            if(d.level < num_gerarchies - 1){
+            if(d.subclass in subCategories){
               openedNodes[d.name] = [];
               addNodes(d);
               return;
             }
             else{
-              addTrueNode(d, d.group);
+              addTrueNode(d);
 	      return;
             }
           }
@@ -366,29 +381,26 @@ HTMLWidgets.widget({
 
     }
       
-      
-      
-      
     function addNodes(d){ //ok!
       sons[d.name] = [];
-      for (var i = 0, len = groups.length; i < len; i++) {
-        if(!(groups[i] == cluster_group)){
-          var toAdd = JSON.parse(JSON.stringify(d));
-          toAdd.name = groups[i]+"Of"+d.name;
-          toAdd.group = groups[i];
-          toAdd.fixed = false;
-          toAdd.level = d.level + 1;
-          toAdd.degree = countDegree(d, toAdd.group);
-          toAdd.dim = Math.floor(toAdd.degree);
-          if(!(toAdd.degree == 0)){
-            graph.nodes.push(toAdd);
-            var lin = JSON.parse('{"source":' +  graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(toAdd) + ', "value": 1}');
+      var toAdd = subCategories[d.group];
+      for(var t in toAdd){
+          var fakeNodeToAdd = JSON.parse(JSON.stringify(d));
+          fakeNodeToAdd.name = subCategories[d.group][t];
+          fakeNodeToAdd.group = d.group;
+	  fakeNodeToAdd.subclass = subCategories[d.group][t];
+          fakeNodeToAdd.fixed = false;
+	  //count degree must count the number of elements in a category
+          fakeNodeToAdd.degree = countDegree(fakeNodeToAdd.subclass);
+          fakeNodeToAdd.dim = Math.floor(fakeNodeToAdd.degree / maxdim);
+          if(!(fakeNodeToAdd.degree == 0)){
+            graph.nodes.push(fakeNodeToAdd);
+            var lin = JSON.parse('{"source":' +  graph.nodes.indexOf(d) + ', "target": ' + graph.nodes.indexOf(fakeNodeToAdd) + ', "value": 1}');
             graph.links.push(lin);
             openedNodes[d.name].push(lin);
-            fatherOf[toAdd.name] = d.name;
-	    sons[d.name].push(toAdd);
+            fatherOf[fakeNodeToAdd.name] = d.name;
+	    sons[d.name].push(fakeNodeToAdd);
           }
-        }
       }
       restartAdd();
     }
@@ -548,13 +560,14 @@ HTMLWidgets.widget({
         )
         .on("dblclick",function(d){
           if (!(d.name in openedNodes)){
-            if(d.level < num_gerarchies - 1){
+            if(d.subclass in subCategories){
               openedNodes[d.name] = [];
               addNodes(d);
               return;
             }
             else{
-              addTrueNode(d, d.group);
+              addTrueNode(d);
+	      return;
             }
           }
           else{
@@ -627,23 +640,13 @@ HTMLWidgets.widget({
 
     }
 
-    function countDegree(d,type){//OK
-    //alert("in countDegree"); OK
-      //founding node...
-      var index = -1;
-      for(i =0; i<imported_nodes.length; ++i){
-          if(imported_nodes[i].name == d.name){
-            index=i;
-            //alert("found " + d.name + " at index " + i); OK
-            break;
-          }
-      }
+    function countDegree(subtype){//OK
       //once founded, count degree by iterating on edges
       var degree = 0;
-      for(j=0; j<imported_links.length; ++j){
-
-        if ((imported_links[j].source == index) && (imported_nodes[imported_links[j].target].group == type))
-          degree++;
+      for(j=0; j<imported_nodes.length; ++j){
+	if (imported_nodes[j].subclass == subtype) {
+	  degree++;	
+	}
       }
       return degree;
     }
@@ -702,6 +705,7 @@ HTMLWidgets.widget({
       }
 
     function nodeSize(d){
+      //node is NOT one of the beginners
       if ("dim" in d){
         if (d.dim < maxdim){
           if (d.dim < defaultdim){
@@ -712,19 +716,15 @@ HTMLWidgets.widget({
         }else{
           return (maxdim-2);
         }
-      }else{
-        if (d.group==cluster_group){
-          return maxdim;
-        }else{
-          return defaultdim;
-        } 
+      }
+      //nodes is one of the beginners
+      else{
+	      return maxdim;
       }
     }
 
     function getText(d){
-      if(d.level == 0 || d.level == last_level -1)
-        return d.name;
-      return (d.group + "( " + ((d.degree*100)/num_of_elem_for_group[d.group]).toFixed(2) +  "%)");
+      return d.subclass;
     }
 
     function collide(alpha) {
