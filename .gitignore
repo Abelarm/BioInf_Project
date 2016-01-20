@@ -1,7 +1,7 @@
 *.json
 .Rhistory
 *~
-.RData
+*.RData
 .Rproj.user
 *.html
 www/
