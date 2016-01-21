@@ -75,31 +75,33 @@ HTMLWidgets.widget({
 
     for (var i = 0, len = imported_nodes.length; i < len; i++) {
     	var actual_group = imported_nodes[i].group;
-	var actual_sub_groups = (imported_nodes[i].subclass).split(";");
+	    var actual_sub_groups = (imported_nodes[i].subclass).split(";");
 	
-	for (var j = 0, jlen = actual_sub_groups.length; j < jlen; j++) {
-	  var actual_sub_group = actual_sub_groups[j];
-	  if (!(actual_group in subCategories)) {
-	    subCategories[actual_group] = {};
-	  }
-	  if (actual_sub_group == "NC") {
-	    continue;
-	  }
+    	for (var j = 0, jlen = actual_sub_groups.length; j < jlen; j++) {
+        if (actual_group=='drug' && actual_sub_groups[j].length==1 && imported_nodes[i].name=='cefepime'){
+          //alert("FOUND");
+          console.log(imported_nodes[i]);
+          break;
+        }
+    	  var actual_sub_group = actual_sub_groups[j];
+    	  if (!(actual_group in subCategories)) {
+    	    subCategories[actual_group] = {};
+    	  }
           if(!(actual_sub_group in subCategories[actual_group])){
             subCategories[actual_group][actual_sub_group] = actual_sub_group; 
-          }
-	}
+        }
+    	}
     }
     
     for (var i = 0, len = groups.length; i < len; i++) {
-    	var nodeToAdd = '{"name":" '+ groups[i] + '","group":"' + groups[i] +'", "subclass": "' + groups[i] + '"}';
-	graph.nodes.push(JSON.parse(nodeToAdd));
+    	var nodeToAdd = '{"name":" '+ groups[i] + '","group":"' + groups[i] +'", "subclass": "NC"}';
+	    graph.nodes.push(JSON.parse(nodeToAdd));
     }
 
     for (var i = 0, len = groups.length; i < len-1; i++) {
 	    for (var j = i+1; j < len; j++) {
 	    	var edgeToAdd = '{"source": ' + i + ', "target": ' + j + ',"value":1}';	
-		graph.links.push(JSON.parse(edgeToAdd));
+		    graph.links.push(JSON.parse(edgeToAdd));
 	    }
     }
     
@@ -207,18 +209,27 @@ HTMLWidgets.widget({
         .attr("r", maxdim)
         .style("fill", function(d) { return color(d.group); })
         .on("dblclick", function(d){
+          console.log("Cliccato:");
+          console.log(d);
           if (!(d.name in openedNodes)){
-            if(d.subclass in subCategories){
+            console.log(d.name + "non in openedNodes");
+            if((d.group in subCategories) && (Object.keys(subCategories[d.group]).length!=1) || 
+              ((Object.keys(subCategories[d.group]).length==1)) && (Object.keys(subCategories[d.group])[0] != "NC")){
+              console.log(subCategories[d.group].length);
+              console.log(d.name + "is subCategories");
+              console.log(subCategories[d.group]);
               openedNodes[d.name] = [];
               addNodes(d);
               return;
             }
             else{
+              console.log("chiamo addTrueNode");
               addTrueNode(d);
-	      return;
+	            return;
             }
           }
           else{
+            console.log(d.name + "non in openedNodes");
 	    //d.name is in openedNodes
             removeNodes(d);
             return;
@@ -286,10 +297,10 @@ HTMLWidgets.widget({
 
         }}
         
-        function drawEdgeLegend(){
+  function drawEdgeLegend(){
         var groupDomainEdge = [];
-	groupDomainEdge.push("Positive Edges");
-	groupDomainEdge.push("Negative Edges");
+	      groupDomainEdge.push("Positive Edges");
+	      groupDomainEdge.push("Negative Edges");
         if(options.legend){
             var legendRectSize = 18;
             var legendSpacing = 4;
@@ -388,9 +399,9 @@ HTMLWidgets.widget({
           var fakeNodeToAdd = JSON.parse(JSON.stringify(d));
           fakeNodeToAdd.name = subCategories[d.group][t];
           fakeNodeToAdd.group = d.group;
-	  fakeNodeToAdd.subclass = subCategories[d.group][t];
+	        fakeNodeToAdd.subclass = subCategories[d.group][t];
           fakeNodeToAdd.fixed = false;
-	  //count degree must count the number of elements in a category
+	        //count degree must count the number of elements in a category
           fakeNodeToAdd.degree = countDegree(fakeNodeToAdd.subclass);
           fakeNodeToAdd.dim = Math.floor(fakeNodeToAdd.degree / maxdim);
           if(!(fakeNodeToAdd.degree == 0)){
@@ -416,43 +427,52 @@ HTMLWidgets.widget({
 
       var toAddLink = [];
       var toAddNodes = [];
+      var toIntrLink = [];
       var IndNodes = graph.nodes.length;
 
       var numlin = 0;
       //primo ciclo: individuare tutti i nodi di una certa subclass ed azzeccarli al padre
       for(j=0; j<imported_nodes.length; ++j){
-        if(imported_nodes[j].subclass == sourceSubClass){
-          //alert("Aggiungo");
-          //alert(FullGraph.links.source[j] + " " + FullGraph.links.target[j]);
-          var nameNodeToAdd = imported_nodes[j].name;
-          var groupNodeToAdd = imported_nodes[j].group;
-          var toParse = '{"name":"' +nameNodeToAdd+ '", "group":"' + groupNodeToAdd + '", "subclass":"' + nameNodeToAdd +'"}';
-	  var objNodeToAdd = JSON.parse(toParse);
-          toAddNodes.push(objNodeToAdd);
+        current = imported_nodes[j];
+        // ci sono alcuni nodi di chem o di drug che hanno come sottoclasse NC e quindi ogni volta 
+        //che vedono sto if ci entrano dentro e quindi sti cazzi
+        if((imported_nodes[j].subclass == sourceSubClass)  && (imported_nodes[j].group == sourceObj.group)){
 
-          //alert(source);
-          var target = IndNodes;
-          var value = 1;  
-          var forparser = '{"source":' + sourceIndex + ', "target":' + target + ', "value":' + value + '}';
-          //alert(forparser);      
-          var lin = JSON.parse(forparser);
-          IndNodes++;
-          toAddLink.push(lin);
+              //alert("Aggiungo");
+              //alert(FullGraph.links.source[j] + " " + FullGraph.links.target[j]);
+              var nameNodeToAdd = imported_nodes[j].name;
+              var groupNodeToAdd = imported_nodes[j].group;
+              var toParse = '{"name":"' +nameNodeToAdd+ '", "group":"' + groupNodeToAdd + '", "subclass":"' + nameNodeToAdd +'"}';
+              toParse.dim = defaultdim;
+              var objNodeToAdd = JSON.parse(toParse);
+
+              toAddNodes.push(objNodeToAdd);
+    
+              //alert(source);
+              
+              var target = IndNodes;
+              var value = 0;  
+              var forparser = '{"source":' + sourceIndex + ', "target":' + target + ', "value":' + value + '}';
+              //alert(forparser);      
+              var lin = JSON.parse(forparser);
+              IndNodes++;
+              toAddLink.push(lin);
+              
         }
       }
 
-
       // alert("---------------NUMERO NODI: " + numlin);
 
-      // alert(toAddLink.length);
-      // alert(toAddNodes.length);
+      //alert(toAddLink.length);
+      //alert(toAddNodes.length);
 
       openedNodes[d.name].push.apply(openedNodes[d.name],toAddLink);
 
-      // console.log(toAddNodes);
+      console.log(toAddNodes);
 
       graph.nodes.push.apply(graph.nodes,toAddNodes);
       graph.links.push.apply(graph.links,toAddLink);
+      graph.links.push.apply(graph.links,toIntrLink);
 
       restartAdd();
 
@@ -463,10 +483,10 @@ HTMLWidgets.widget({
       var toremove = openedNodes[d.name];
       
       if(d.name in sons){
-	for (var i = 0, len = sons[d.name].length; i < len; i++) {
-	  if (sons[d.name][i].name in openedNodes) {
-	    removeNodes(sons[d.name][i]);
-	  }	
+      	for (var i = 0, len = sons[d.name].length; i < len; i++) {
+      	  if (sons[d.name][i].name in openedNodes) {
+      	    removeNodes(sons[d.name][i]);
+      	  }	
         }
       }
 
@@ -514,7 +534,7 @@ HTMLWidgets.widget({
             return "#FF0000";
           }
         })
-        .style("stroke-width", function(d) { return stroke_width; });
+        .style("stroke-width", function(d) { return d.value; });
 
       //alert("Lunghezza link dopo restart:"+  link.data().length);
       gnodes = gnodes.data(graph.nodes);
@@ -694,6 +714,8 @@ HTMLWidgets.widget({
       }
 
     function nodeSize(d){
+
+      return defaultdim;
       //node is NOT one of the beginners
       if ("dim" in d){
         if (d.dim < maxdim){
@@ -714,7 +736,7 @@ HTMLWidgets.widget({
 
     function getText(d){
       //super trick: negli ultimi nodi la subclass e' uguale al nome
-      return d.subclass;
+      return d.name;
     }
 
     function collide(alpha) {
