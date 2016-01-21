@@ -445,12 +445,12 @@ HTMLWidgets.widget({
               var toParse = '{"name":"' +nameNodeToAdd+ '", "group":"' + groupNodeToAdd + '", "subclass":"' + nameNodeToAdd +'"}';
               var objNodeToAdd = JSON.parse(toParse);
               objNodeToAdd.index = j;
-              objNodeToAdd.dim =defaultdim;
-              var target = IndNodes +1 
-              objNodeToAdd.newIndex = target;
+              objNodeToAdd.dim = defaultdim;
+              var newIndex = IndNodes;
+              objNodeToAdd.newIndex = newIndex;
               toAddNodes.push(objNodeToAdd);
               var value = 0;  
-              var forparser = '{"source":' + sourceIndex + ', "target":' + target + ', "value":' + value + '}';
+              var forparser = '{"source":' + sourceIndex + ', "target":' + newIndex + ', "value":' + value + '}';
               //alert(forparser);      
               var lin = JSON.parse(forparser);
               IndNodes++;
@@ -462,36 +462,33 @@ HTMLWidgets.widget({
       // COMPLESSITA' n^2*m       n= nodi sottocategoria  m= numero archi del grafo
       // esempio 29*29*1.5kk
       for (var i = 0; i < toAddNodes.length-1; i++) {
-        source = toAddNodes[i];
+        var actual_source = toAddNodes[i];
         for (var j = i+1 ;  j < toAddNodes.length; j++) {
-            target = toAddNodes[j];
+            var actual_target = toAddNodes[j];
 
             for (var k = 0; k < imported_links.length; k++) {
 
-                link = imported_links[k];
+                var actual_link = imported_links[k];
             
-                if (imported_links[k].source == source.name && imported_links[k].target == target.name){
+                if (imported_links[k].source == actual_source.name && imported_links[k].target == actual_target.name){
 
-                  lin = JSON.parse(JSON.stringify(imported_links[k]));
+                  var lin = JSON.parse(JSON.stringify(imported_links[k]));
 
-                  lin.source = source.newIndex;
-                  lin.target = target.newIndex;
+                  lin.source = actual_source.newIndex;
+                  lin.target = actual_target.newIndex;
 
                   toAddLink.push(lin);
 
                   break;
-
-
                 }
-
             }
         }
       }
 
       // alert("---------------NUMERO NODI: " + numlin);
 
-      //alert(toAddLink.length);
-      //alert(toAddNodes.length);
+      // alert(toAddLink.length);
+      // alert(toAddNodes.length);
 
       openedNodes[d.name].push.apply(openedNodes[d.name],toAddLink);
 
@@ -501,7 +498,6 @@ HTMLWidgets.widget({
       graph.links.push.apply(graph.links,toAddLink);
 
       restartAdd();
-
     }
 
     function removeNodes(d){

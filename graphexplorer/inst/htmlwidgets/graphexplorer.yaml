@@ -3,5 +3,5 @@ dependencies:
     version: 0.0.1
     src: "htmlwidgets/lib/d3"
     script: 
-      - d3.min.js
+      - d3.js
       - spin.min.js
