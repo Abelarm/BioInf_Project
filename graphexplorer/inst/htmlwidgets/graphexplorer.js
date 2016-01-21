@@ -443,14 +443,12 @@ HTMLWidgets.widget({
               var nameNodeToAdd = imported_nodes[j].name;
               var groupNodeToAdd = imported_nodes[j].group;
               var toParse = '{"name":"' +nameNodeToAdd+ '", "group":"' + groupNodeToAdd + '", "subclass":"' + nameNodeToAdd +'"}';
-              toParse.dim = defaultdim;
               var objNodeToAdd = JSON.parse(toParse);
-
+              objNodeToAdd.index = j;
+              objNodeToAdd.dim =defaultdim;
+              var target = IndNodes +1 
+              objNodeToAdd.newIndex = target;
               toAddNodes.push(objNodeToAdd);
-    
-              //alert(source);
-              
-              var target = IndNodes;
               var value = 0;  
               var forparser = '{"source":' + sourceIndex + ', "target":' + target + ', "value":' + value + '}';
               //alert(forparser);      
@@ -458,6 +456,35 @@ HTMLWidgets.widget({
               IndNodes++;
               toAddLink.push(lin);
               
+        }
+      }
+
+      // COMPLESSITA' n^2*m       n= nodi sottocategoria  m= numero archi del grafo
+      // esempio 29*29*1.5kk
+      for (var i = 0; i < toAddNodes.length-1; i++) {
+        source = toAddNodes[i];
+        for (var j = i+1 ;  j < toAddNodes.length; j++) {
+            target = toAddNodes[j];
+
+            for (var k = 0; k < imported_links.length; k++) {
+
+                link = imported_links[k];
+            
+                if (imported_links[k].source == source.name && imported_links[k].target == target.name){
+
+                  lin = JSON.parse(JSON.stringify(imported_links[k]));
+
+                  lin.source = source.newIndex;
+                  lin.target = target.newIndex;
+
+                  toAddLink.push(lin);
+
+                  break;
+
+
+                }
+
+            }
         }
       }
 
@@ -472,7 +499,6 @@ HTMLWidgets.widget({
 
       graph.nodes.push.apply(graph.nodes,toAddNodes);
       graph.links.push.apply(graph.links,toAddLink);
-      graph.links.push.apply(graph.links,toIntrLink);
 
       restartAdd();
 
