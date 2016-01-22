@@ -281,33 +281,17 @@ HTMLWidgets.widget({
         .attr("class","node")
         .attr("r", maxdim)
         .style("fill", function(d) { return color(d.group); })
-        .on("dblclick", function(d){
-          console.log("Cliccato:");
-          console.log(d);
-          if (!(d.name in openedNodes)){
-            console.log(d.name + "non in openedNodes");
-            if((d.group in subCategories) && (Object.keys(subCategories[d.group]).length!=1) || 
-              ((Object.keys(subCategories[d.group]).length==1)) && (Object.keys(subCategories[d.group])[0] != "NC")){
-              console.log(subCategories[d.group].length);
-              console.log(d.name + "is subCategories");
-              console.log(subCategories[d.group]);
-              openedNodes[d.name] = [];
-              addNodes(d);
-              return;
-            }
-            else{
-              console.log("chiamo addTrueNode");
-              addTrueNode(d);
-	            return;
-            }
-          }
-          else{
-            console.log(d.name + "non in openedNodes");
-	    //d.name is in openedNodes
-            removeNodes(d);
-            return;
-          }
-        })
+	.on("dblclick", function(d){
+		if (!(d.name in openedNodes)) {
+		  if('first_level' in all_nodes[d.group]){
+		    var nodes_to_be_opened = all_nodes[d.group]['first_level'];
+		    console.log(Object.keys(nodes_to_be_opened).length);	
+                  }else{
+		    var nodes_to_be_opened = all_nodes[d.group]['NC'];
+		    console.log(Object.keys(nodes_to_be_opened).length);	
+		  }
+		}
+	})
         .on("click", function(d){
            var event = d3.event;
            var ctrlPressed = event.ctrlKey;
