@@ -8,7 +8,7 @@ graphexplorer <- function(Links,
                         NodeID,
                         Nodesize,
                         Group,
-                        Subclass = "subclass",
+                        Subclass = "subtype",
                         height = NULL,
                         width = NULL,
                         colourScale = JS("d3.scale.category20()"),
@@ -51,7 +51,7 @@ graphexplorer <- function(Links,
     nodesize = TRUE
   }else{
     NodesDF <- data.frame(Nodes[, NodeID], Nodes[, Group], Nodes[, Subclass])
-    names(NodesDF) <- c("name", "group", "subclass")
+    names(NodesDF) <- c("name", "group", "subtype")
     nodesize = FALSE
   }
   LinksDF <- data.frame(LinksDF, colour=linkColour)
