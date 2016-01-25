@@ -24,23 +24,27 @@ HTMLWidgets.widget({
   },
 
   renderValue: function(el, x, force) {
+
+    //CAMBIARE ASSOLUTAMENTE QUESTA MERDA
+    //FA COLLISIONE ANCHE SU 886k di archi
+    //PORCODIO
+
 	  String.prototype.hashCode = function() {
 	    var hash = 0, i, chr, len;
 	      if (this.length === 0) return hash;
 	      for (i = 0, len = this.length; i < len; i++) {
-			  chr   = this.charCodeAt(i);
-			      hash  = ((hash << 5) - hash) + chr;
-				  hash |= 0; // Convert to 32bit integer
-				    
+			     chr   = this.charCodeAt(i);
+			     hash  = ((hash << 5) - hash) + chr;
+				   hash |= 0; // Convert to 32bit integer 
 	      }
 		return hash;
-
 	  };
   
     var options = x.options;
 
     // convert links and nodes data frames to d3 friendly format
     var imported_links = HTMLWidgets.dataframeToD3(x.links);
+    console.log("NUMERO ARCHI " + imported_links.length);
     var imported_nodes = HTMLWidgets.dataframeToD3(x.nodes);
     
     var all_links = {};
@@ -50,17 +54,16 @@ HTMLWidgets.widget({
         
         var source_name = imported_nodes[imported_links[i].source].name;
         var target_name = imported_nodes[imported_links[i].target].name;
+
         var name = source_name+target_name;
         var reverse_name = target_name+source_name; 
-      	if (source_name.indexOf('default') >= 0 && target_name.indexOf('default') >= 0)  {
-      		// console.log("Source name: " + source_name + " Target name: " + target_name + " Value: " + imported_links[i].value + " Hash: " + name.hashCode());	
-      	}
-      	// console.log(name + " " + reverse_name);
-      	if (!(name in all_links || reverse_name in all_links)) {
+      	if (!(name in all_links) && !(reverse_name in all_links)) {
       	  all_links[name.hashCode()] = imported_links[i];
       	}
     }
-          
+
+    console.log("NUMERO ARCHI struttura: " + Object.keys(all_links).length);
+
     for (var i = 0; i < imported_nodes.length; i++){
         if (!(imported_nodes[i].group in all_nodes)){
             all_nodes[imported_nodes[i].group] = {};
@@ -70,6 +73,10 @@ HTMLWidgets.widget({
       	}
         all_nodes[imported_nodes[i].group][imported_nodes[i].subtype][imported_nodes[i].name] = imported_nodes[i];
     }
+
+
+    console.log(all_nodes);
+    console.log(all_links);
 
     // get the width and height
     var width = el.offsetWidth;
@@ -121,22 +128,22 @@ HTMLWidgets.widget({
 	      // console.log(name.length);
 	      var actual_link = all_links[name.hashCode()];
 	      if(name.hashCode() in all_links){
-		actual_link = all_links[name.hashCode()];
+		      actual_link = all_links[name.hashCode()];
 		      if(!(typeof actual_link == 'undefined')){
-			toaddi = JSON.parse(JSON.stringify(toAddNodes[i]));
-                        toaddj = JSON.parse(JSON.stringify(toAddNodes[j]));
-			if (!(toaddi.name in alreadyAddedNodes)) {
-			  alreadyAddedNodes[toaddi.name] = toaddi;
-			  toaddi.index = graph.nodes.length;
-			  graph.nodes.push(toaddi);
-			}else{
-			  toaddi = alreadyAddedNodes[toaddi.name];
-			}
-			if (!(toaddj.name in alreadyAddedNodes)) {
-			  alreadyAddedNodes[toaddj.name] = toaddj;
-			  toaddj.index = graph.nodes.length;
-			  graph.nodes.push(toaddj);
-			}else{
+			       toaddi = JSON.parse(JSON.stringify(toAddNodes[i]));
+             toaddj = JSON.parse(JSON.stringify(toAddNodes[j]));
+    			if (!(toaddi.name in alreadyAddedNodes)) {
+    			  alreadyAddedNodes[toaddi.name] = toaddi;
+    			  toaddi.index = graph.nodes.length;
+    			  graph.nodes.push(toaddi);
+    			}else{
+			     toaddi = alreadyAddedNodes[toaddi.name];
+			   }
+  			if (!(toaddj.name in alreadyAddedNodes)) {
+  			  alreadyAddedNodes[toaddj.name] = toaddj;
+  			  toaddj.index = graph.nodes.length;
+  			  graph.nodes.push(toaddj);
+  			}else{
 			  toaddj = alreadyAddedNodes[toaddj.name];
 			}
 			var edgeToAdd = {};
@@ -243,11 +250,11 @@ HTMLWidgets.widget({
     //FIRST DRAWING, ONLY GROUPS AND LINK BETWEEN THEM 
 
     //draw links
-    link = svg.selectAll(".link")
+    link = svg.selectAll("g.glink")
         .data(graph.links)
         .enter()
         .append("g")
-	.attr("class","glink")
+	      .attr("class","glink")
         .on("mouseover", LinkOver)
         .on("mouseout", LinkOut)
         .append("line")
@@ -262,6 +269,9 @@ HTMLWidgets.widget({
           }
         });
 
+    console.log(link);
+    console.log(svg.selectAll("g.glink"));
+
     //draw nodes
     gnodes = svg.selectAll('g.gnode')
             .data(graph.nodes)
@@ -275,6 +285,8 @@ HTMLWidgets.widget({
             .style("stroke-width", "1.5px")
             .call(drag);
 
+    console.log(gnodes);
+
     //problem here
     node = gnodes
         .append("circle")
@@ -283,28 +295,30 @@ HTMLWidgets.widget({
         .style("fill", function(d){ 
           return color(d.group);
         })
-	  .on("dblclick", function(d){
-		  if (!(d.name in openedNodes)) {
-		    if('first_level' in all_nodes[d.group]){
-		      addNodes(d);	
-        }else{
-		      var nodes_to_be_opened = all_nodes[d.group]['NC'];
-		      //console.log(Object.keys(nodes_to_be_opened));	
-		    }
-		  }else{
-        removeNodes(d);
-      }
-	  })
+    	  .on("dblclick", function(d){
+    		  if (!(d.name in openedNodes)) {
+    		    if('first_level' in all_nodes[d.group]){
+    		      addNodes(d);	
+            }else{
+    		      addTrueNodes(d);
+    		    }
+    		  }else{
+            removeNodes(d);
+          }
+    	  })
         .on("click", function(d){
            var event = d3.event;
            var ctrlPressed = event.ctrlKey;
            var shiftPressed = event.shiftKey;
+           var altPressed = event.altKey;
            if(shiftPressed){
             connectedNodes(d);
            }
            else if (ctrlPressed) {
             if (d.fixed) {
              d.fixed = false; 
+            }else if(altPressed){
+              getEdgesFrom(d);
             } 
            }
           }
@@ -334,7 +348,7 @@ HTMLWidgets.widget({
                 var offset =  legend_height* groupDomain.length / 2;
                 var horz = legendRectSize;
                 var vert = i * legend_height+4;
-		// console.log("horz " + horz + " vert " + vert);
+		            // console.log("horz " + horz + " vert " + vert);
                 return 'translate(' + horz + ',' + vert + ')';
               });
 
@@ -463,6 +477,8 @@ HTMLWidgets.widget({
       console.log("NUMERO NODI PRIMA ADDNODES " + graph.nodes.length);
       console.log("NUMERO ARCHI PRIMA ADDNODES " + graph.links.length);
 
+      sons[d.name] = [];
+
       (Object.keys(to_be_added)).forEach(function(tba){
 
         currentNode = all_nodes[d.group]['first_level'][tba];
@@ -470,14 +486,13 @@ HTMLWidgets.widget({
         currentNode.cat = currentNode.name.split(";")[0];
         currentNode.name = currentNode.name.split(";")[1];
         graph.nodes.push(currentNode);
+        sons[d.name].push(currentNode);
         alreadyAddedNodes[currentNode.name] = currentNode;
-        //console.log(currentNode);
         var name = d.name+currentNode.cat+";"+currentNode.name;
         if (name.hashCode() in all_links){
           var lin = all_links[name.hashCode()];
           lin.source = graph.nodes.indexOf(alreadyAddedNodes[d.name]);
           lin.target = graph.nodes.length-1;
-
           lin = JSON.parse(JSON.stringify(lin));
           graph.links.push(lin);
           openedNodes[d.name].push(lin);
@@ -488,7 +503,6 @@ HTMLWidgets.widget({
             var lin = all_links[reverse_name.hashCode()];
             lin.source = graph.nodes.length-1;
             lin.target = graph.nodes.indexOf(alreadyAddedNodes[d.name]); 
-
             lin = JSON.parse(JSON.stringify(lin));
             graph.links.push(lin);
             openedNodes[d.name].push(lin);
@@ -516,11 +530,72 @@ HTMLWidgets.widget({
       restartAdd();
     }
 
-    function addTrueNode(d){
+    function addTrueNodes(d){
 
-      //NOT WORKS!!!
+      console.log("Prima della addTrueNodes nodi: " + graph.nodes.length);
+      console.log("Prima della addTrueNodes archi: " + graph.links.length);
+
+      openedNodes[d.name] = [];
+
+      if (typeof d.cat == 'undefined'){
+        cat = 'NC';
+      }else{
+        cat = d.cat;
+      }
+      var to_be_added = all_nodes[d.group][cat];
+      var keys = Object.keys(to_be_added);
+      console.log(keys);
+      for (var i = 0; i < keys.length; i++) {
+        var currentNodei = JSON.parse(JSON.stringify(all_nodes[d.group][cat][keys[i]]));
+        if(typeof alreadyAddedNodes[currentNodei.name] == 'undefined'){
+          //console.log("AGGIUNGO: " + currentNodei.name)
+          alreadyAddedNodes[currentNodei.name] = currentNodei;
+          graph.nodes.push(currentNodei);
+        }
+        for (var j = i +1 ; j < keys.length; j++) {
+          var currentNodej = JSON.parse(JSON.stringify(all_nodes[d.group][cat][keys[j]]));
+          if (typeof alreadyAddedNodes[currentNodej.name] == 'undefined'){
+            //console.log("AGGIUNGO: " + currentNodej.name)
+            alreadyAddedNodes[currentNodej.name] = currentNodej;
+            graph.nodes.push(currentNodej);
+          }
+          var name = currentNodei.name+currentNodej.name
+          if (name.hashCode() in all_links){
+            //console.log("Arco tra: " + currentNodei.name + " e " + currentNodej.name);
+            lin = JSON.parse(JSON.stringify(all_links[name.hashCode()]));
+            lin.source = graph.nodes.indexOf(alreadyAddedNodes[currentNodei.name]);
+            lin.target = graph.nodes.indexOf(alreadyAddedNodes[currentNodej.name]);
+            openedNodes[d.name].push(lin);
+            graph.links.push(lin);
+          }else{
+            var reverse_name = currentNodej.name+currentNodei.name;
+            if (reverse_name.hashCode() in all_links){
+              //console.log("Arco tra: " + currentNodej.name + " e " + currentNodei.name);
+              lin = JSON.parse(JSON.stringify(all_links[reverse_name.hashCode()]));
+              lin.source = graph.nodes.indexOf(alreadyAddedNodes[currentNodej.name]);
+              lin.target = graph.nodes.indexOf(alreadyAddedNodes[currentNodei.name]);
+              openedNodes[d.name].push(lin);
+              graph.links.push(lin);
+            }
+          }
+        }
+
+        lin = {};
+        lin.source = graph.nodes.indexOf(alreadyAddedNodes[currentNodei.name]);
+        lin.target = graph.nodes.indexOf(alreadyAddedNodes[d.name]);
+        lin.value = 0;
+        //console.log("STO AGGIUNGENDO");
+        graph.links.push(lin);
+        openedNodes[d.name].push(lin);
+      }
+
+      console.log(graph.nodes);
+      console.log(graph.links);
+      console.log("Dopo della addTrueNodes nodi: " + graph.nodes.length);
+      console.log("Dopo della addTrueNodes archi: " + graph.links.length);
       restartAdd();
     }
+
 
     function removeNodes(d){
       console.log("Prima della remove sono: " + graph.nodes.length);
@@ -528,27 +603,35 @@ HTMLWidgets.widget({
 
       var toremove = openedNodes[d.name];
       
-      /*
+      
       if(d.name in sons){
       	for (var i = 0, len = sons[d.name].length; i < len; i++) {
       	  if (sons[d.name][i].name in openedNodes) {
       	    removeNodes(sons[d.name][i]);
       	  }	
         }
-      }*/
+      }
 
       toremove.forEach(function(link_to_remove) {
 
-          if (link_to_remove.source.name == d.name){
+        if (link_to_remove.source.name != d.name && link_to_remove.target.name != d.name){
+          if (graph.nodes.indexOf(link_to_remove.target) != -1 && graph.nodes.indexOf(link_to_remove.source) != -1){
             graph.nodes.splice(graph.nodes.indexOf(link_to_remove.target),1);
-          }else{
-            graph.nodes.splice(graph.nodes.indexOf(link_to_remove.source),1);            
-          } 
-          console.log(graph.links.indexOf(link_to_remove));
-          if (graph.links.indexOf(link_to_remove) >= 0){
-            graph.links.splice(graph.links.indexOf(link_to_remove),1);
+            graph.nodes.splice(graph.nodes.indexOf(link_to_remove.source),1);
           }
-
+        }else{     
+          if (link_to_remove.source.subtype != 'default' && graph.nodes.indexOf(link_to_remove.source) != -1){
+              graph.nodes.splice(graph.nodes.indexOf(link_to_remove.source),1);
+          }else{
+            if (link_to_remove.target.subtype != 'default' && graph.nodes.indexOf(link_to_remove.target) != -1){
+                graph.nodes.splice(graph.nodes.indexOf(link_to_remove.target),1);            
+            }
+          }
+        }
+        //console.log(graph.links.indexOf(link_to_remove));
+        if (graph.links.indexOf(link_to_remove) >= 0){
+          graph.links.splice(graph.links.indexOf(link_to_remove),1);
+        }
       });
 
       delete openedNodes[d.name];
@@ -566,31 +649,48 @@ HTMLWidgets.widget({
       // alert("stroke_width = " + stroke_width);
       //link = svg.selectAll(".link")
                         //.data(graph.links)
-      link = link.data(graph.links);
+      tmp = svg.selectAll("g.glink")
+                .data(graph.links);
 
-      link.enter()
-        .insert("line", "g.gnode")
+      link = svg.selectAll(".link")
+
+      console.log("UNDEFINEDDD?")
+      console.log(link);
+      console.log(tmp);
+
+      var wronglink = tmp.enter()
+        .append("g")
+        .attr("class","glink")
+        .on("mouseover", LinkOver)
+        .on("mouseout", LinkOut)
+        .append("line")
         .attr("class", "link")
-        .on("mouseover", function(d) {
-            d3.select(this)
-              .style("opacity", options.opacity);
-        })
-        .on("mouseout", function(d) {
-            d3.select(this)
-              .style("opacity", options.opacity / 2);
-        })
         .style("opacity", options.opacity / 2)
         .style("stroke",function(d){
-          if(d.value == 1){
-            return "#000000";
-          }
           if(d.value>0){
             return "#008000";
           }else{
             return "#FF0000";
           }
         })
-        .style("stroke-width", function(d) { return d.value; });
+        .style("stroke-width", function(d) { return Math.abs(d.value); });
+
+      console.log("------------");
+      console.log("wronglink");
+      console.log(wronglink);
+      console.log("Link");
+      console.log(link);
+
+     for (i = 0; i < wronglink[0].length; i++) {
+        nd = wronglink[0][i];
+        if(!!nd){
+          link[0].push(nd);
+        }
+     }
+
+      console.log("------------");
+      console.log("LINK");
+      console.log(link);
 
       //alert("Lunghezza link dopo restart:"+  link.data().length);
       gnodes = gnodes.data(graph.nodes);
@@ -615,30 +715,26 @@ HTMLWidgets.widget({
         })
         .on("click", function(d){
            var event = d3.event;
-           ctrlPressed =event.ctrlKey;
-           if (ctrlPressed) {
+           var ctrlPressed = event.ctrlKey;
+           var shiftPressed = event.shiftKey;
+           var altPressed = event.altKey;
+           if(shiftPressed){
+            connectedNodes(d);
+           }
+           else if (ctrlPressed) {
             if (d.fixed) {
              d.fixed = false; 
+            }else if(altPressed){
+              getEdgesFrom(d);
             } 
            }
           }
         )
         .on("dblclick",function(d){
           if (!(d.name in openedNodes)){
-            if(d.subclass in subCategories){
-              openedNodes[d.name] = [];
-              addNodes(d);
-              return;
-            }
-            else{
-              addTrueNode(d);
-	      return;
-            }
-          }
-          else{
-	    //d.name is in openedNodes
-            removeNodes(d);
-            return;
+            addTrueNodes(d);
+          }else{
+            return removeNodes(d);
           }
         })
         .call(drag);
@@ -678,7 +774,7 @@ HTMLWidgets.widget({
       link.enter()
         .insert("line", ".node")
         .attr("class", "link")
-        .style("stroke-width", function(d) { return d.value; });
+        .style("stroke-width", function(d) { return Math.abs(d.value); });
 
       //alert("Lunghezza link dopo restart:"+  link.data().length);
       gnodes = gnodes.data(graph.nodes);
@@ -747,10 +843,8 @@ HTMLWidgets.widget({
         .attr("y", function (d) {
               return d.y;
         
-        });
-
-        
-      }
+        });    
+    }
 
 
     function mouseout() {
@@ -767,7 +861,7 @@ HTMLWidgets.widget({
           .style("opacity", options.opacityNoHover)
           .remove();
 
-      }
+    }
 
     function nodeSize(d){
 
@@ -833,7 +927,10 @@ HTMLWidgets.widget({
       //console.log(d3.select(this).select("text"));
 
 
-      //console.log(l.select("text")[0]);
+      console.log(l);
+
+
+      console.log(l.select("text")[0]);
 
       l.append('svg:text')
         .text(function(d) { return (d.value).toFixed(2); })
@@ -883,8 +980,7 @@ HTMLWidgets.widget({
       l.select(".link") 
               .style("opacity", options.opacity/2);
 
-
-      //console.log(l.select("text")[0]);
+      console.log(l.select("text")[0]);
 
       if (l.select("text")[0][0] != null){
 
@@ -911,16 +1007,46 @@ HTMLWidgets.widget({
           
           //Reduce the op
           toggle = 1;
-	  glinks.on("mouseover", null);
-	  glinks.on("mouseout", null);
+    	    glinks.on("mouseover", null);
+    	    glinks.on("mouseout", null);
       } else {
           //Put them back to opacity=1
           gnodes.select("circle").style("opacity", 1);
           link.style("opacity", options.opacity/2);
           toggle = 0;
-	  glinks.on("mouseover", LinkOver);
-	  glinks.on("mouseout", LinkOut);
+	        glinks.on("mouseover", LinkOver);
+	        glinks.on("mouseout", LinkOut);
       }
+
+  }
+
+  function getEdgesFrom(d){
+
+
+    for (var i = 0; i < grap.nodes.length; i++) {
+      currentNode = grap.nodes[i];
+      if (currentNode.name != d.name && currentNode.group != d.group){
+        name = currentNode.name;+d.name;
+        if (name.hashCode() in all_links){
+          console.log(all_links[name.hashCode()]);
+        }else{
+          reverse_name = d.name+currentNode.name;
+          if (reverse_name.hashCode() in all_links){
+             console.log(all_links[reverse_name.hashCode()]);
+          }else{
+            name = currentNode.cat+";"+currentNode.name+d.name;
+            if (name.hashCode() in all_links){
+              console.log(all_links[name.hashCode()]);
+            }else{
+              reverse_name = d.name+currentNode.cat+";"+currentNode.name;
+              if (reverse_name.hashCode() in all_links){
+                console.log(all_links[reverse_name.hashCode()]);
+              }
+            }
+          }
+        }
+      }
+    }
 
   }
 
@@ -931,6 +1057,3 @@ HTMLWidgets.widget({
     
   }//end render
 }) //end htmlwidget
-  
-  
-
