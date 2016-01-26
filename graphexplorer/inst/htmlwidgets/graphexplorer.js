@@ -94,6 +94,7 @@ HTMLWidgets.widget({
     var indexMap = {};
     var alreadyAddedNodes = {};
     var subCategories = {};
+    var toggle_render_edges = {};
 
     var graph = JSON.parse('{"nodes":[], "links":[]}');
     var types = Object.keys(all_nodes);
@@ -307,7 +308,9 @@ HTMLWidgets.widget({
              d.fixed = false; 
             }
 	   }else if(altPressed){
-              getEdgesFrom(d);
+	      //undefined is evaluated as false
+	      if(!(toggle_render_edges[d.name]['opened']))
+		  getEdgesFrom(d);
             } 
            }
         )
@@ -1028,57 +1031,64 @@ HTMLWidgets.widget({
       }
 
   }
-
+  
+  //useless to call if it is to close, but we will do it (we are tired of this code)
   function getEdgesFrom(d){
     var list_of_edges = [];
     for (var i = 0; i < graph.nodes.length; i++) {
       currentNode = graph.nodes[i];
       if (currentNode.name != d.name && currentNode.group != d.group){
-        var current_edge_name = currentNode.name+d.name;
-        if (md5(current_edge_name) in all_links){
+	var current_edge_name = currentNode.name+d.name;
+	if (md5(current_edge_name) in all_links){
 	  list_of_edges.push(all_links[md5(current_edge_name)]);
-          console.log(all_links[md5(current_edge_name)]);
+	  console.log(all_links[md5(current_edge_name)]);
 	  console.log(imported_nodes[all_links[md5(current_edge_name)].source]);
 	  console.log(imported_nodes[all_links[md5(current_edge_name)].target]);
-        }else{
-          var current_reverse_edge_name = d.name+currentNode.name;
-          if (md5(current_reverse_edge_name) in all_links){
+	}else{
+	  var current_reverse_edge_name = d.name+currentNode.name;
+	  if (md5(current_reverse_edge_name) in all_links){
 	     list_of_edges.push(all_links[md5(current_reverse_edge_name)]);
-             console.log(all_links[md5(current_reverse_edge_name)]);
+	     console.log(all_links[md5(current_reverse_edge_name)]);
 	     console.log(imported_nodes[all_links[md5(current_reverse_edge_name)].source]);
 	     console.log(imported_nodes[all_links[md5(current_reverse_edge_name)].target]);
-          }else{ //Maybe the edge is with ; inside
-            var current_edge_name_cat = currentNode.cat+";"+currentNode.name+d.name;
-            if (md5(current_edge_name_cat) in all_links){
+	  }else{ //Maybe the edge is with ; inside
+	    var current_edge_name_cat = currentNode.cat+";"+currentNode.name+d.name;
+	    if (md5(current_edge_name_cat) in all_links){
 	      list_of_edges.push(all_links[md5(current_edge_name_cat)]);
-              console.log(all_links[md5(current_edge_name_cat)]);
+	      console.log(all_links[md5(current_edge_name_cat)]);
 	      console.log(imported_nodes[all_links[md5(current_edge_name_cat)].source]);
 	      console.log(imported_nodes[all_links[md5(current_edge_name_cat)].target]);
-            }else{
-              var current_reverse_edge_name_cat = d.name+currentNode.cat+";"+currentNode.name;
-              if (md5(current_reverse_edge_name_cat) in all_links){
-	        list_of_edges.push(all_links[md5(current_reverse_edge_name_cat)]);
-                console.log(all_links[md5(current_reverse_edge_name_cat)]);
+	    }else{
+	      var current_reverse_edge_name_cat = d.name+currentNode.cat+";"+currentNode.name;
+	      if (md5(current_reverse_edge_name_cat) in all_links){
+		list_of_edges.push(all_links[md5(current_reverse_edge_name_cat)]);
+		console.log(all_links[md5(current_reverse_edge_name_cat)]);
 		console.log(imported_nodes[all_links[md5(current_reverse_edge_name_cat)].source]);
-	        console.log(imported_nodes[all_links[md5(current_reverse_edge_name_cat)].target]);
-              }
-            }
-          }
-        }
+		console.log(imported_nodes[all_links[md5(current_reverse_edge_name_cat)].target]);
+	      }
+	    }
+	  }
+	}
       }
     }
     renderAndDeRender(d.name,list_of_edges);
   }
 
   function renderAndDeRender(name, list_of_edges) {
-	  if(!toggle_render_edges[name]){
-		  // console.log(list_of_edges);
+	  if(!(name in toggle_render_edges)){
+		  toggle_render_edges[name] = {}; 
+		  toggle_render_edges[name]['opened'] = false;
+		  toggle_render_edges[name]['edges'] = [];
+	  }
+	  if(!toggle_render_edges[name]['opened']){
+		  toggle_render_edges[name]['opened'] = true;
 		  if(list_of_edges.length > 0){
 			  svg.selectAll('.link').style("opacity", 0);
 			  svg.selectAll('.glink').on("mouseover", null);
 			  svg.selectAll('.glink').on("mouseout", null);
 			  for (var i = 0, len = list_of_edges.length; i < len; i++) {
 			    var actual_edge = JSON.parse(JSON.stringify(list_of_edges[i]));
+			    //maronn
 			    var actual_source = graph.nodes.indexOf(alreadyAddedNodes[imported_nodes[actual_edge.source].name]);
 			    var actual_target = graph.nodes.indexOf(alreadyAddedNodes[imported_nodes[actual_edge.target].name]);
 
@@ -1086,19 +1096,23 @@ HTMLWidgets.widget({
 				continue;
 			    actual_edge.source = actual_source;
 			    actual_edge.target = actual_target;
-
+			
 			    // console.log(actual_edge);
-
+			    toggle_render_edges[name]['edges'].push(actual_edge);
 			    graph.links.push(actual_edge);
 			  }
-			  toggle_render_edges[name] = true;
+			  
 			  restartAdd(true);
 		  }	  
 	  }else{
+	    for (var i = 0, len = toggle_render_edges[name]['edges'].length; i < len; i++) {
+	      graph.links.splice(graph.links.indexOf(toggle_render_edges[name]['edges'][i]), 1);	
+	    }
 	    svg.selectAll('.link').style("opacity", options.opacity/2);
 	    svg.selectAll('.glink').on("mouseover", LinkOver);
 	    svg.selectAll('.glink').on("mouseout", LinkOut);
-	    toggle_render_edges[name] = false; 
+	    toggle_render_edges[name]['opened'] = false;
+	    delete toggle_render_edges[name];
 	    restartAdd();
 	  }
   }
