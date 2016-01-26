@@ -1081,8 +1081,8 @@ HTMLWidgets.widget({
 		  toggle_render_edges[name]['edges'] = [];
 	  }
 	  if(!toggle_render_edges[name]['opened']){
-		  toggle_render_edges[name]['opened'] = true;
 		  if(list_of_edges.length > 0){
+			  toggle_render_edges[name]['opened'] = true;
 			  svg.selectAll('.link').style("opacity", 0);
 			  svg.selectAll('.glink').on("mouseover", null);
 			  svg.selectAll('.glink').on("mouseout", null);
@@ -1099,7 +1099,9 @@ HTMLWidgets.widget({
 			
 			    // console.log(actual_edge);
 			    toggle_render_edges[name]['edges'].push(actual_edge);
+			    linkedByIndex[actual_edge.source + "," + actual_edge.target] = 1;
 			    graph.links.push(actual_edge);
+			    
 			  }
 			  
 			  restartAdd(true);
@@ -1113,7 +1115,7 @@ HTMLWidgets.widget({
 	    svg.selectAll('.glink').on("mouseout", LinkOut);
 	    toggle_render_edges[name]['opened'] = false;
 	    delete toggle_render_edges[name];
-	    restartAdd();
+	    restartRemove();
 	  }
   }
 
