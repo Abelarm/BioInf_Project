@@ -5,3 +5,5 @@ dependencies:
     script: 
       - d3.js
       - spin.min.js
+      - core.js
+      - md5.js

@@ -25,21 +25,7 @@ HTMLWidgets.widget({
 
   renderValue: function(el, x, force) {
 
-    //CAMBIARE ASSOLUTAMENTE QUESTA MERDA
-    //FA COLLISIONE ANCHE SU 886k di archi
-    //PORCODIO
-
-	  String.prototype.hashCode = function() {
-	    var hash = 0, i, chr, len;
-	      if (this.length === 0) return hash;
-	      for (i = 0, len = this.length; i < len; i++) {
-			     chr   = this.charCodeAt(i);
-			     hash  = ((hash << 5) - hash) + chr;
-				   hash |= 0; // Convert to 32bit integer 
-	      }
-		return hash;
-	  };
-  
+    var md5 = CryptoJS.MD5;
     var options = x.options;
 
     // convert links and nodes data frames to d3 friendly format
@@ -58,7 +44,7 @@ HTMLWidgets.widget({
         var name = source_name+target_name;
         var reverse_name = target_name+source_name; 
       	if (!(name in all_links) && !(reverse_name in all_links)) {
-      	  all_links[name.hashCode()] = imported_links[i];
+      	  all_links[md5(name)] = imported_links[i];
       	}
     }
 
@@ -126,9 +112,9 @@ HTMLWidgets.widget({
 	      var name = toAddNodes[i].name+toAddNodes[j].name;
 	      var reverse_name = toAddNodes[j].name+toAddNodes[i].name;
 	      // console.log(name.length);
-	      var actual_link = all_links[name.hashCode()];
-	      if(name.hashCode() in all_links){
-		      actual_link = all_links[name.hashCode()];
+	      var actual_link = all_links[md5(name)];
+	      if(md5(name) in all_links){
+		      actual_link = all_links[md5(name)];
 		      if(!(typeof actual_link == 'undefined')){
 			       toaddi = JSON.parse(JSON.stringify(toAddNodes[i]));
              toaddj = JSON.parse(JSON.stringify(toAddNodes[j]));
@@ -154,7 +140,7 @@ HTMLWidgets.widget({
 		      }
 	      }
 	      else{
-		actual_link = all_links[reverse_name.hashCode()];
+		actual_link = all_links[md5(reverse_name)];
 		      if(!(typeof actual_link == 'undefined')){
 			
 			toaddj = JSON.parse(JSON.stringify(toAddNodes[j]));
@@ -317,11 +303,11 @@ HTMLWidgets.widget({
            else if (ctrlPressed) {
             if (d.fixed) {
              d.fixed = false; 
-            }else if(altPressed){
+            }
+	   }else if(altPressed){
               getEdgesFrom(d);
             } 
            }
-          }
         )
         .style("stroke", '#fff')
         .style("stroke-width", 1);
@@ -489,8 +475,8 @@ HTMLWidgets.widget({
         sons[d.name].push(currentNode);
         alreadyAddedNodes[currentNode.name] = currentNode;
         var name = d.name+currentNode.cat+";"+currentNode.name;
-        if (name.hashCode() in all_links){
-          var lin = all_links[name.hashCode()];
+        if (md5(name) in all_links){
+          var lin = all_links[md5(name)];
           lin.source = graph.nodes.indexOf(alreadyAddedNodes[d.name]);
           lin.target = graph.nodes.length-1;
           lin = JSON.parse(JSON.stringify(lin));
@@ -499,8 +485,8 @@ HTMLWidgets.widget({
         }
         else{
           var reverse_name = currentNode.cat+";"+currentNode.name+d.name;
-          if(reverse_name.hashCode() in all_links){
-            var lin = all_links[reverse_name.hashCode()];
+          if(md5(reverse_name) in all_links){
+            var lin = all_links[md5(reverse_name)];
             lin.source = graph.nodes.length-1;
             lin.target = graph.nodes.indexOf(alreadyAddedNodes[d.name]); 
             lin = JSON.parse(JSON.stringify(lin));
@@ -560,18 +546,18 @@ HTMLWidgets.widget({
             graph.nodes.push(currentNodej);
           }
           var name = currentNodei.name+currentNodej.name
-          if (name.hashCode() in all_links){
+          if (md5(name) in all_links){
             //console.log("Arco tra: " + currentNodei.name + " e " + currentNodej.name);
-            lin = JSON.parse(JSON.stringify(all_links[name.hashCode()]));
+            lin = JSON.parse(JSON.stringify(all_links[md5(name)]));
             lin.source = graph.nodes.indexOf(alreadyAddedNodes[currentNodei.name]);
             lin.target = graph.nodes.indexOf(alreadyAddedNodes[currentNodej.name]);
             openedNodes[d.name].push(lin);
             graph.links.push(lin);
           }else{
             var reverse_name = currentNodej.name+currentNodei.name;
-            if (reverse_name.hashCode() in all_links){
+            if (md5(reverse_name) in all_links){
               //console.log("Arco tra: " + currentNodej.name + " e " + currentNodei.name);
-              lin = JSON.parse(JSON.stringify(all_links[reverse_name.hashCode()]));
+              lin = JSON.parse(JSON.stringify(all_links[md5(reverse_name)]));
               lin.source = graph.nodes.indexOf(alreadyAddedNodes[currentNodej.name]);
               lin.target = graph.nodes.indexOf(alreadyAddedNodes[currentNodei.name]);
               openedNodes[d.name].push(lin);
@@ -618,13 +604,17 @@ HTMLWidgets.widget({
           if (graph.nodes.indexOf(link_to_remove.target) != -1 && graph.nodes.indexOf(link_to_remove.source) != -1){
             graph.nodes.splice(graph.nodes.indexOf(link_to_remove.target),1);
             graph.nodes.splice(graph.nodes.indexOf(link_to_remove.source),1);
+	    delete alreadyAddedNodes[graph.nodes.indexOf(link_to_remove.target).name];
+	    delete alreadyAddedNodes[graph.nodes.indexOf(link_to_remove.source).name];
           }
         }else{     
           if (link_to_remove.source.subtype != 'default' && graph.nodes.indexOf(link_to_remove.source) != -1){
               graph.nodes.splice(graph.nodes.indexOf(link_to_remove.source),1);
+	      delete alreadyAddedNodes[graph.nodes.indexOf(link_to_remove.source).name];
           }else{
             if (link_to_remove.target.subtype != 'default' && graph.nodes.indexOf(link_to_remove.target) != -1){
                 graph.nodes.splice(graph.nodes.indexOf(link_to_remove.target),1);            
+	        delete alreadyAddedNodes[graph.nodes.indexOf(link_to_remove.target).name];
             }
           }
         }
@@ -642,7 +632,7 @@ HTMLWidgets.widget({
       restartRemove();
     }
 
-    function restartAdd(){
+    function restartAdd(flag = false){
 
       // alert("Lunghezza link prima restart:"+ link.data().length);
       // alert("Lunghezza node prima restart:"+ node.data().length);
@@ -658,6 +648,11 @@ HTMLWidgets.widget({
       console.log(link);
       console.log(tmp);
 
+      var op = options.opacity / 2;
+
+      if(flag)
+	op = op * 2;
+	
       var wronglink = tmp.enter()
         .append("g")
         .attr("class","glink")
@@ -665,7 +660,7 @@ HTMLWidgets.widget({
         .on("mouseout", LinkOut)
         .append("line")
         .attr("class", "link")
-        .style("opacity", options.opacity / 2)
+        .style("opacity", op)
         .style("stroke",function(d){
           if(d.value>0){
             return "#008000";
@@ -724,11 +719,12 @@ HTMLWidgets.widget({
            else if (ctrlPressed) {
             if (d.fixed) {
              d.fixed = false; 
-            }else if(altPressed){
-              getEdgesFrom(d);
-            } 
+            }
+	   }
+	   else if(altPressed){
+	      getEdgesFrom(d);
+           } 
            }
-          }
         )
         .on("dblclick",function(d){
           if (!(d.name in openedNodes)){
@@ -1021,33 +1017,77 @@ HTMLWidgets.widget({
   }
 
   function getEdgesFrom(d){
-
-
-    for (var i = 0; i < grap.nodes.length; i++) {
-      currentNode = grap.nodes[i];
+    var list_of_edges = [];
+    for (var i = 0; i < graph.nodes.length; i++) {
+      currentNode = graph.nodes[i];
       if (currentNode.name != d.name && currentNode.group != d.group){
-        name = currentNode.name;+d.name;
-        if (name.hashCode() in all_links){
-          console.log(all_links[name.hashCode()]);
+        var current_edge_name = currentNode.name+d.name;
+        if (md5(current_edge_name) in all_links){
+	  list_of_edges.push(all_links[md5(current_edge_name)]);
+          console.log(all_links[md5(current_edge_name)]);
+	  console.log(imported_nodes[all_links[md5(current_edge_name)].source]);
+	  console.log(imported_nodes[all_links[md5(current_edge_name)].target]);
         }else{
-          reverse_name = d.name+currentNode.name;
-          if (reverse_name.hashCode() in all_links){
-             console.log(all_links[reverse_name.hashCode()]);
-          }else{
-            name = currentNode.cat+";"+currentNode.name+d.name;
-            if (name.hashCode() in all_links){
-              console.log(all_links[name.hashCode()]);
+          var current_reverse_edge_name = d.name+currentNode.name;
+          if (md5(current_reverse_edge_name) in all_links){
+	     list_of_edges.push(all_links[md5(current_reverse_edge_name)]);
+             console.log(all_links[md5(current_reverse_edge_name)]);
+	     console.log(imported_nodes[all_links[md5(current_reverse_edge_name)].source]);
+	     console.log(imported_nodes[all_links[md5(current_reverse_edge_name)].target]);
+          }else{ //Maybe the edge is with ; inside
+            var current_edge_name_cat = currentNode.cat+";"+currentNode.name+d.name;
+            if (md5(current_edge_name_cat) in all_links){
+	      list_of_edges.push(all_links[md5(current_edge_name_cat)]);
+              console.log(all_links[md5(current_edge_name_cat)]);
+	      console.log(imported_nodes[all_links[md5(current_edge_name_cat)].source]);
+	      console.log(imported_nodes[all_links[md5(current_edge_name_cat)].target]);
             }else{
-              reverse_name = d.name+currentNode.cat+";"+currentNode.name;
-              if (reverse_name.hashCode() in all_links){
-                console.log(all_links[reverse_name.hashCode()]);
+              var current_reverse_edge_name_cat = d.name+currentNode.cat+";"+currentNode.name;
+              if (md5(current_reverse_edge_name_cat) in all_links){
+	        list_of_edges.push(all_links[md5(current_reverse_edge_name_cat)]);
+                console.log(all_links[md5(current_reverse_edge_name_cat)]);
+		console.log(imported_nodes[all_links[md5(current_reverse_edge_name_cat)].source]);
+	        console.log(imported_nodes[all_links[md5(current_reverse_edge_name_cat)].target]);
               }
             }
           }
         }
       }
     }
+    renderAndDeRender(list_of_edges);
+  }
 
+  function renderAndDeRender(list_of_edges) {
+	  if(!toggle_render_edges){
+		  // console.log(list_of_edges);
+		  if(list_of_edges.length > 0){
+			  svg.selectAll('.link').style("opacity", 0);
+			  svg.selectAll('.glink').on("mouseover", null);
+			  svg.selectAll('.glink').on("mouseout", null);
+			  for (var i = 0, len = list_of_edges.length; i < len; i++) {
+			    var actual_edge = JSON.parse(JSON.stringify(list_of_edges[i]));
+			    var actual_source = graph.nodes.indexOf(alreadyAddedNodes[imported_nodes[actual_edge.source].name]);
+			    var actual_target = graph.nodes.indexOf(alreadyAddedNodes[imported_nodes[actual_edge.target].name]);
+
+			    if(actual_source == -1 || actual_target == -1)
+				continue;
+			    actual_edge.source = actual_source;
+			    actual_edge.target = actual_target;
+
+			    // console.log(actual_edge);
+
+			    graph.links.push(actual_edge);
+			  }
+			  toggle_render_edges = true;
+			  restartAdd(true);
+		  }	  
+	  }else{
+	    svg.selectAll('.link').style("opacity", options.opacity/2);
+	    svg.selectAll('.glink').on("mouseover", LinkOver);
+	    svg.selectAll('.glink').on("mouseout", LinkOut);
+	    toggle_render_edges = false; 
+	    restartAdd();
+	  }
   }
 
   function neighboring(a, b) {
