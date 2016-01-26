@@ -67,6 +67,7 @@ HTMLWidgets.widget({
     // get the width and height
     var width = el.offsetWidth;
     var height = el.offsetHeight;
+    var toggle_render_edges = {}
 
     var maxdim = 20;
     var defaultdim = 5;
@@ -164,6 +165,7 @@ HTMLWidgets.widget({
 			edgeToAdd.target = toaddi.index;
 			edgeToAdd.value = actual_link.value;
 			graph.links.push(edgeToAdd);
+      linkedByIndex[edgeToAdd.source + "," + edgeToAdd.target] = 1;
 		      }
 	      }
 	   }
@@ -482,6 +484,8 @@ HTMLWidgets.widget({
           lin = JSON.parse(JSON.stringify(lin));
           graph.links.push(lin);
           openedNodes[d.name].push(lin);
+          linkedByIndex[lin.source + "," + lin.target] = 1;
+
         }
         else{
           var reverse_name = currentNode.cat+";"+currentNode.name+d.name;
@@ -492,6 +496,7 @@ HTMLWidgets.widget({
             lin = JSON.parse(JSON.stringify(lin));
             graph.links.push(lin);
             openedNodes[d.name].push(lin);
+            linkedByIndex[lin.source + "," + lin.target] = 1;
              
           }else{
 
@@ -501,6 +506,7 @@ HTMLWidgets.widget({
             lin.value = 0;
             graph.links.push(lin);
             openedNodes[d.name].push(lin);
+            linkedByIndex[lin.source + "," + lin.target] = 1;
 
           }
         }
@@ -553,6 +559,7 @@ HTMLWidgets.widget({
             lin.target = graph.nodes.indexOf(alreadyAddedNodes[currentNodej.name]);
             openedNodes[d.name].push(lin);
             graph.links.push(lin);
+            linkedByIndex[lin.source + "," + lin.target] = 1;
           }else{
             var reverse_name = currentNodej.name+currentNodei.name;
             if (md5(reverse_name) in all_links){
@@ -562,6 +569,7 @@ HTMLWidgets.widget({
               lin.target = graph.nodes.indexOf(alreadyAddedNodes[currentNodei.name]);
               openedNodes[d.name].push(lin);
               graph.links.push(lin);
+              linkedByIndex[lin.source + "," + lin.target] = 1;
             }
           }
         }
@@ -573,6 +581,7 @@ HTMLWidgets.widget({
         //console.log("STO AGGIUNGENDO");
         graph.links.push(lin);
         openedNodes[d.name].push(lin);
+        linkedByIndex[lin.source + "," + lin.target] = 1;
       }
 
       console.log(graph.nodes);
@@ -602,25 +611,26 @@ HTMLWidgets.widget({
 
         if (link_to_remove.source.name != d.name && link_to_remove.target.name != d.name){
           if (graph.nodes.indexOf(link_to_remove.target) != -1 && graph.nodes.indexOf(link_to_remove.source) != -1){
+            delete alreadyAddedNodes[graph.nodes[graph.nodes.indexOf(link_to_remove.target)].name];
+            delete alreadyAddedNodes[graph.nodes[graph.nodes.indexOf(link_to_remove.source)].name];
             graph.nodes.splice(graph.nodes.indexOf(link_to_remove.target),1);
             graph.nodes.splice(graph.nodes.indexOf(link_to_remove.source),1);
-	    delete alreadyAddedNodes[graph.nodes.indexOf(link_to_remove.target).name];
-	    delete alreadyAddedNodes[graph.nodes.indexOf(link_to_remove.source).name];
           }
         }else{     
           if (link_to_remove.source.subtype != 'default' && graph.nodes.indexOf(link_to_remove.source) != -1){
+              delete alreadyAddedNodes[graph.nodes[graph.nodes.indexOf(link_to_remove.source)].name];
               graph.nodes.splice(graph.nodes.indexOf(link_to_remove.source),1);
-	      delete alreadyAddedNodes[graph.nodes.indexOf(link_to_remove.source).name];
           }else{
             if (link_to_remove.target.subtype != 'default' && graph.nodes.indexOf(link_to_remove.target) != -1){
+                delete alreadyAddedNodes[graph.nodes[graph.nodes.indexOf(link_to_remove.target)].name];
                 graph.nodes.splice(graph.nodes.indexOf(link_to_remove.target),1);            
-	        delete alreadyAddedNodes[graph.nodes.indexOf(link_to_remove.target).name];
             }
           }
         }
         //console.log(graph.links.indexOf(link_to_remove));
         if (graph.links.indexOf(link_to_remove) >= 0){
           graph.links.splice(graph.links.indexOf(link_to_remove),1);
+          linkedByIndex[link_to_remove.source + "," + link_to_remove.target] = 0;
         }
       });
 
@@ -632,7 +642,9 @@ HTMLWidgets.widget({
       restartRemove();
     }
 
-    function restartAdd(flag = false){
+    function restartAdd(flag){
+
+      flag = flag || false;
 
       // alert("Lunghezza link prima restart:"+ link.data().length);
       // alert("Lunghezza node prima restart:"+ node.data().length);
@@ -651,7 +663,7 @@ HTMLWidgets.widget({
       var op = options.opacity / 2;
 
       if(flag)
-	op = op * 2;
+	       op = op * 2;
 	
       var wronglink = tmp.enter()
         .append("g")
@@ -762,15 +774,16 @@ HTMLWidgets.widget({
       //alert("Lunghezza link prima restart:"+ link.data().length);
       //alert("Lunghezza node prima restart:"+ node.data().length);
 
-      link = link.data(graph.links);
+      tmp = svg.selectAll("g.glink")
+                .data(graph.links);
 
-      link.exit()
-          .remove();
+      tmp.exit().remove();
 
-      link.enter()
-        .insert("line", ".node")
-        .attr("class", "link")
-        .style("stroke-width", function(d) { return Math.abs(d.value); });
+      console.log(link);
+      
+      link = svg.selectAll(".link");
+
+      console.log(link);
 
       //alert("Lunghezza link dopo restart:"+  link.data().length);
       gnodes = gnodes.data(graph.nodes);
@@ -1054,11 +1067,11 @@ HTMLWidgets.widget({
         }
       }
     }
-    renderAndDeRender(list_of_edges);
+    renderAndDeRender(d.name,list_of_edges);
   }
 
-  function renderAndDeRender(list_of_edges) {
-	  if(!toggle_render_edges){
+  function renderAndDeRender(name, list_of_edges) {
+	  if(!toggle_render_edges[name]){
 		  // console.log(list_of_edges);
 		  if(list_of_edges.length > 0){
 			  svg.selectAll('.link').style("opacity", 0);
@@ -1078,14 +1091,14 @@ HTMLWidgets.widget({
 
 			    graph.links.push(actual_edge);
 			  }
-			  toggle_render_edges = true;
+			  toggle_render_edges[name] = true;
 			  restartAdd(true);
 		  }	  
 	  }else{
 	    svg.selectAll('.link').style("opacity", options.opacity/2);
 	    svg.selectAll('.glink').on("mouseover", LinkOver);
 	    svg.selectAll('.glink').on("mouseout", LinkOut);
-	    toggle_render_edges = false; 
+	    toggle_render_edges[name] = false; 
 	    restartAdd();
 	  }
   }

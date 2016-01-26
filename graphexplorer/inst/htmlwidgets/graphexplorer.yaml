@@ -1,5 +1,5 @@
 dependencies:
-  - name: nanocluster
+  - name: graphexplorer
     version: 0.0.1
     src: "htmlwidgets/lib/d3"
     script: 
