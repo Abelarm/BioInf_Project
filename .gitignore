@@ -6,3 +6,10 @@
 *.html
 www/
 *.swp
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.gz
+*.tox

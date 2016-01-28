@@ -48,6 +48,7 @@
 
 
 \section{iNSIdEnano}
+\subsection{Dati}
 \begin{frame}
 \frametitle{iNSIdEnano}
 iNSIdEnano è un tool grafico che mette in evidenza le connessioni tra entità fenotipiche del tipo:
@@ -73,6 +74,7 @@ Per ogni entità fenotipica nel dataset, è assegnata una lista di geni. In part
 Quindi per costruire una network di similarità tra entità fenotipiche è stato necessario calcolare la similarità a coppie per ogni entità.
 \end{frame}
 
+\subsection{Generazione Network}
 \begin{frame}
 \frametitle{Insieme di geni vs Insieme di geni}
 Il Jaccard index è stato utilizzato per calcolare la similarità tra due malattie, tra due agenti chimici o tra un agente chimico e una malattia.\\
@@ -87,7 +89,7 @@ Per quelli down-regolati il Jaccard index è calcolato con il segno negativo.
 
 
 \begin{frame}
-\frametitle{Insieme di geni vs Insieme di geni}
+\frametitle{Geni ordinati vs Geni ordinati}
 La distanza Kendall Tau è stata utilizzata per calcolare la similarità tra nanomateriali e nanomateriali, tra farmaci e farmaci e tra nanomateriali e farmaci, basata sulla lista ordinata dei geni.
 La distanza Kendall Tau tra due liste $T1$ e $T2$ è definita come segue:
 \begin{equation}
@@ -98,6 +100,32 @@ K(T_1, T_2) = |(i, j): i < j, (T_1(i) < T_1(i) \wedge  T_2(i) > T_2(j)) \vee
 $
 \end{center}
 questa distanza è compresa tra 0 e $n(n$ $1)$, dove $n$ è la lunghezza della lista. Il valore significa che gli elementi nella lista sono nello stesso ordine, mentre il valore $n(n$ $1)$, indica che gli elementi sono in ordine opposto
+\end{frame}
+
+\begin{frame}
+\frametitle{Genio ordinati vs insieme di geni}
+La Gen Set Enrichment Analysis (GSEA), basata sul test di Kolmogorov-Smirnov, è stato usata per calcolare la similarità a coppie tra nanomateriali e malattie, tra nanomateriali e agenti chimici, tra farmaci e malattie ed infine tra farmaci e agenti chimici. Il test di KolmogorovSmirnov può essere usato per confrontare elementi con una distribuzione di probabilità. La distribuzione empirica $F_n$ per osservazioni \textit{iid}, è definito:
+\begin{equation}
+F_n(x) = \frac{1}{n} \sum\limits_{i=1}^n I[-\inf,x](x_i)
+\end{equation}
+\end{frame}
+
+\begin{frame}
+dove:
+\begin{center}
+$I[-\inf,x](x_i)$
+\end{center}
+è la funzione definita su $X$ che indica l'appartenenza di un elemento in un sottoinsieme $A$ di $X$ che ha valore 1 per tutti gli elementi di $A$ e 0 per tutti gli elementi di $X$ non in $A$. La statistica KolmogorovSmirnov per una distribuzione cumulativa $F(x)$ è 
+\begin{center}
+$D_n = sup_x[F_n(x)- F(x)]$
+\end{center}
+La statistica KolmogorovSmirnov è stata usata non in valore assoluto per preservare il segno. Ciò aiuta a capire se un gene è up o down-regolato, ovviamente anche questi valori sono stati normalizzati tra $[-1:1]$
+\end{frame}
+
+\subsection{Implmentazione}
+\begin{frame}
+\frametitle{Implmentazione}
+INSIdEnano è stato implemetato in $R$ usando Shiny come libreria per l'interfaccia grafica. Il sistema è stato implementato in una struttura client-server: il client è responsabile per la gestione dell'interfaccia, mentre il serve processa i dati dal database in base agli input dell'utente,  e restituisce il risultato di tale computazione al client.
 \end{frame}
 
 
