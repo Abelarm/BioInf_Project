@@ -10,9 +10,9 @@
 \usepackage[utf8]{inputenc} 
 \usepackage{epsfig}  
 \usepackage{amsmath} 
-\usepackage{url}
 \usepackage{multicol}
 \usepackage{amsfonts}
+\usepackage{hyperref}
 
 \usepackage{listings}% http://ctan.org/pkg/listings
 \lstset{
@@ -23,8 +23,8 @@
 \setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
 
 \title{Big Network Visualizzation Tool for iNSIdEnano}
-\author{Luigi Giugliano}
-\institute{Universit\'a degli studi di Salerno}
+\author{Luigi Giugliano$^1$, Marco Mecchia$^1$}
+\institute{$^1$Universit\'a degli studi di Salerno}
 
 
 \begin{document}
@@ -145,8 +145,117 @@ METTERE IMMAGINE GRAFICO INVISUALIZZABILE
 \end{frame}
 
 \section{Soluzione}
+\subsection{Idea}
 \begin{frame}
-La soluzione
+\frametitle{Idea}
+La nostra idea consiste nel creare una visualizzazione esplorativa, di tale network. Partendo da un piccolo sottoinsieme di informazioni. E guidati dall'input dell'utente in maniera incrementale aggiungere il minor numero di informazioni alla network per aiutare l'utente nella scelta del prossimo nodo di cui avere informazioni.\\
+\medskip
+In questo modo le informazioni visualizzate sono quelle che l'utente ha richiesto e non tutte quelle presenti nella network. Parlando in termini di grafo in questo modo verranno visualizzati solo gli archi incidenti ai nodi scelti dall'utente. 
+\end{frame}
+
+\begin{frame}
+L'idea spiegata precedentemente risulta realizzabile perché la sia per quanto riguarda gli agenti chimici che per i farmaci esistono delle gerarchie.
+Ovvero ogni elemento di queste due classi appartiene ad una supercasse, che rappresenta le caratteristiche generiche degli elementi che ne fanno parte. Esempio:\\
+\medskip
+\begin{center}
+''Organic Chemicals :- Dichlorophen''\\
+''Enzymes and Coenzymes :- Neopterin''
+\end{center}
+Tale gerarchia può essere aumentata con ulteriori livelli. Nel nostro caso però ci siamo fermati a un livello.
+\end{frame}
+
+\begin{frame}
+Però per quanto riguarda i nanomateriali e le malattie tali gerarchie non sono presenti. Il problema però non si pone per i nanomateriali perché essendo solo 29 risultano facilmente visualizzabili.\\
+\medskip
+Per le malattie il discorso è leggermente diverso essendo, circa 600 si sconsiglia di scegliere tale categoria per l'inizio dell'esplorazione
+\end{frame}
+
+\subsection{Realizzazione}
+\begin{frame}
+L'idea iniziale è quella di visualizzare solo le 4 macro-categorie:\\
+INSERIRE IMMAGINE
+\end{frame}
+
+\begin{frame}
+una volta scelta una categoria da cui partire l'esplorazione è possibile espanderla (doppio click) e visualizzare solo le sue sotto-categorie (se presenti).\\
+INSERIRE IMMAGINE
+\end{frame}
+
+\begin{frame}
+Scelta una sotto-categoria è possibile espanderla per visualizzare i veri nodi e le connessione tra di essi.\\
+INSERIRE IMMAGINE 
+\end{frame}
+
+\begin{frame}
+Una volta ripetuta questa operazione su di un'altra macro-categoria e successivamente su di una sua  sotto-categoria.\\
+INSERIRE IMMAGINE
+\end{frame}
+
+\begin{frame}
+E' possibile con (Alt + click) visualizzare gli archi che escono da quel nodo e che entrano in uno che fa parte di un'altra macro-categoria.\\
+INSERIRE IMMAGINE
+\end{frame}
+
+\begin{frame}
+Ricliccando un di un nodo che rappresenta una sotto-categoria o uno che rappresenta la macro-categoria i nodi che erano precedente espansi vengono eliminati e si torna ad una stato iniziale.\\
+\medskip
+La stessa cosa vale per le informazioni aggiunge attraverso alt + click, anche esse possono essere rimosse ricliccando sullo stesso nodo. 
+\end{frame}
+
+\begin{frame}
+Un'altra feature che è stata inserita per facilitare la visualizzazione è quella dello Shift + click. Che cliccato su di un nodo mette in evidenza tutti gli archi incidenti su quel nodo e i nodi che fanno parte del vicinato di quel nodo, nascondendo tutti gli altri.\\
+INSERIRE IMMAGINE.
+\end{frame}
+
+
+\begin{frame}
+Inoltre sono state aggiunte una serie di features accessorie che semplificano la visualizzazione come:
+\begin{itemize}
+\item Colorazione degli archi in base al valore (verdi: positivi, rossi: negativi)
+\item Spessore degli archi in base al valore
+\item Legenda in alto a sinistra per i nodi, a destra per gli archi
+\item Label su gli archi
+\item Label sui nodi.
+\item Drag and drop, release.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+INSERIRE LE IMMAGINI DELLA LISTA DI PRIMA
+\end{frame}
+
+\subsection{Implementazione}
+\begin{frame}
+\frametitle{Implementazione}
+Il core dell'implementazione è stata effettuata in Javascript, attraverso una libreria di visualizzazione  di grafi chiamata:
+\begin{center}
+\href{http://d3js.org/}{d3.js}
+\end{center}
+che si collega ad R attraverso un ''HTMLWidgets'' che può essere renderizzato all'interno di uno shiny widget oppure chiamato come visualizzatore di dati R generico.
+\end{frame}
+
+\begin{frame}
+E' stato creato il package R che è possibile installare su qualsiasi ambiente avente la versione di R maggiore di 3.2, per motivi di compatibilità.\\
+E' possibile trovare tale pacchetto al link:
+\begin{center}
+\url{https://github.com/Abelarm/BioInf_Project}
+\end{center}
+\end{frame}
+
+\section{Bonus}
+\begin{frame}
+\frametitle{Bonus}
+Sulla stessa falsa riga, è stato creato un'ulteriore tool per la visualizzazione di un grafo diverso, ma sfruttando le stesse idee. Però il grafo non è quello completo, ma bensì la network che risulta dalla clustering in base ai nanomateriali.\\
+\medskip
+Dove per ogni nanomateriale vi sono solo i collegamenti con gli elementi facenti parti delle altre 3 macro-categorie.
+\end{frame}
+
+\begin{frame}
+INSERIRE IMMAGINE GRAFO DI MERDA
+\end{frame}
+
+\begin{frame}
+INSERIRE VARIE IMMAGINI DEL NOSTRO GRAFO
 \end{frame}
 
 \end{document}
