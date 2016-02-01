@@ -1,0 +1,10 @@
+\frametitle{Nanocluster installation}
+Per installare il tool Nanocluster e' sufficiente eseguire i seguenti comandi da terminale:
+\begin{footnotesize}
+\begin{lstlisting}
+ $ git clone https://github.com/Abelarm/BioInf_Project.git
+ $ cd BioInf_Project/nanocluster
+ $ R
+ > devtools::install()
+\end{lstlisting}
+\end{footnotesize}
