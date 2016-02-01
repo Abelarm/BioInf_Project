@@ -70,7 +70,7 @@ Quindi per costruire una network di similarità tra entità fenotipiche è stato
 
 \subsection{Generazione Network}
 \begin{frame}
-\frametitle{Overview}
+\frametitle{Calcolo delle distanze: Panoramica}
 \begin{center}
 \includegraphics[scale=0.20]{img/Grafo.png}
 \end{center}
@@ -98,7 +98,7 @@ K(T_1, T_2) = |(i, j): i < j, (T_1(i) < T_1(i) \wedge  T_2(i) > T_2(j)) \vee
 \begin{center}
 	$ (T_1(i) > T_i(j) \wedge T_2(i) < T_2(J))  | $
 \end{center}
-questa distanza è compresa tra 0 e $n*\binom{n}{1}$, dove $n$ è la lunghezza della lista. 
+questa distanza è compresa tra 0 e $n*(n -1)$, dove $n$ è la lunghezza della lista. 
 \end{frame}
 
 \begin{frame}
@@ -140,8 +140,8 @@ INSIdEnano è stato implemetato usando $R$ per il back end e Javascript per il f
 \begin{frame}
 \frametitle{Problema}
 \begin{alertblock}{Problema}
-I nodi presenti nel grafo sono 3686.
-Le distanze sono state calcolate per ogni coppia di nodi del grafo. Il numero di archi  quindi pari a $3686 * 3685 \approx 15000000$.
+I nodi presenti nel grafo sono 3866.
+Le distanze sono state calcolate per ogni coppia di nodi del grafo. Il numero di archi  quindi pari a $3866 * 3865 \approx 15000000$.
 \end{alertblock}
 L'elevato numero di archi rende questo grafo:\\
 \begin{center}
@@ -183,7 +183,7 @@ Tale gerarchia può essere aumentata con ulteriori livelli.
 Nei nanomateriali e nelle malattie tali gerarchie non sono presenti.
 \begin{itemize}
 \item I nanomateriali possono essere visualizzati tutti in quanto sono solo 29.
-\item Le malattie sono circa 600, per cui si sconsiglia di esplorare questa categoria inizialmente.
+\item Le malattie sono circa 600, per cui si sconsiglia di iniziare l'esplorazione da questa categoria.
 \end{itemize}
 \medskip
 \end{frame}
