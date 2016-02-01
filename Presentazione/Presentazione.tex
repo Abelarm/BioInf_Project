@@ -1,6 +1,5 @@
 \documentclass{beamer}
 
-
 \usepackage{listings}
 \usepackage[italian]{babel}
 \usepackage[T1]{fontenc}
@@ -51,59 +50,58 @@
 \subsection{Dati}
 \begin{frame}
 \frametitle{iNSIdEnano}
-iNSIdEnano è un tool grafico che mette in evidenza le connessioni tra entità fenotipiche del tipo:
+iNSIdEnano è un tool grafico che mette in evidenza le connessioni tra \alert{entità fenotipiche}:
 \begin{itemize}
-\item Esposizione ai nanomateriali
-\item Trattamenti farmaceutici
-\item Esposizione ad agenti chimici
-\item Malattie
+\item Esposizione ai nanomateriali.
+\item Trattamenti farmaceutici.
+\item Esposizione ad agenti chimici.
+\item Malattie.
 \end{itemize}
-L' interazione tra queste entità è valutata in base al loro effetto sull'espressione dei geni.
+L'interazione tra queste entità è valutata in base al loro effetto sull'espressione dei geni.
 \end{frame}
 
 \begin{frame}
-\begin{center}
-\includegraphics[scale=0.27]{img/OverviewGraph.png}
-\end{center}
-E' stata calcolata la distanza per ogni coppia di entità. Sono poi state normalizzate tra -1 e 1 per renderle confrontabili.
-\end{frame}
-
-\begin{frame}
-Per ogni entità fenotipica nel dataset, è assegnata una lista di geni. In particolare un'insieme di geni è associato a ogni malattia e ogni agente chimico, invece per ogni farmaco e per ogni nanomateriale è associata una lista ordinata di geni. \\
+\frametitle{Associazione dei geni}
+Per ogni entità fenotipica nel dataset, è stata assegnata una lista di geni. In particolare:
+\begin{itemize}
+	\item Ad un'insieme di geni vengono associati tutte le malettie e tutti gli agenti chimici.
+	\item Ad ogni farmaco e nanomateriale vengono associate liste ordinate di geni.
+\end{itemize}
 \medskip
 Quindi per costruire una network di similarità tra entità fenotipiche è stato necessario calcolare la similarità a coppie per ogni entità.
 \end{frame}
 
 \subsection{Generazione Network}
 \begin{frame}
+\frametitle{Overview}
+\begin{center}
+\includegraphics[scale=0.27]{img/OverviewGraph.png}
+\end{center}
+E' stata calcolata la distanza per ogni coppia di entità. Tali distanze sono state poi normalizzate tra -1 e 1 per renderle confrontabili.
+\end{frame}
+
+\begin{frame}
 \frametitle{Insieme di geni vs Insieme di geni}
 Il Jaccard index è stato utilizzato per calcolare la similarità tra due malattie, tra due agenti chimici o tra un agente chimico e una malattia.\\
-Dati due insiemi A e B l'indice di Jaccard è dato dalla dimensione della loro intersezione diviso la dimensione della loro unione.
-\begin{equation}
-J(A, B) = \frac{|A \cap B|}{|A \cup  B|}
-\end{equation}
-Questa misura è zero se i due insieme non condividono neanche un gene, mentre 1 se sono esattamente uguali.\\
+Dati due insiemi A e B \'e definito come:
+$$ J(A, B) = \frac{|A \cap B|}{|A \cup  B|} $$
 Per ogni agente chimico vengono considerati due set di geni: quelli che sono up-regolati da quell'agente chimico e quelli che sono down-regolati.
 Per quelli down-regolati il Jaccard index è calcolato con il segno negativo.
 \end{frame}
-
 
 \begin{frame}
 \frametitle{Geni ordinati vs Geni ordinati}
 La distanza Kendall Tau è stata utilizzata per calcolare la similarità tra nanomateriali e nanomateriali, tra farmaci e farmaci e tra nanomateriali e farmaci, basata sulla lista ordinata dei geni.
 La distanza Kendall Tau tra due liste $T1$ e $T2$ è definita come segue:
-\begin{equation}
-K(T_1, T_2) = |(i, j): i < j, (T_1(i) < T_1(i) \wedge  T_2(i) > T_2(j)) \vee
-\end{equation}
-\begin{center}$
- (T_1(i) > T_i(j) \wedge T_2(i) < T_2(J))  |
-$
+$$ K(T_1, T_2) = |(i, j): i < j, (T_1(i) < T_1(i) \wedge  T_2(i) > T_2(j)) \vee $$
+\begin{center}
+	$ (T_1(i) > T_i(j) \wedge T_2(i) < T_2(J))  | $
 \end{center}
-questa distanza è compresa tra 0 e $n(n$ $1)$, dove $n$ è la lunghezza della lista. Il valore significa che gli elementi nella lista sono nello stesso ordine, mentre il valore $n(n$ $1)$, indica che gli elementi sono in ordine opposto
+questa distanza è compresa tra 0 e $n*\binom{n}{1}$, dove $n$ è la lunghezza della lista. 
 \end{frame}
 
 \begin{frame}
-\frametitle{Genio ordinati vs insieme di geni}
+\frametitle{Geni ordinati vs insieme di geni}
 La Gen Set Enrichment Analysis (GSEA), basata sul test di Kolmogorov-Smirnov, è stato usata per calcolare la similarità a coppie tra nanomateriali e malattie, tra nanomateriali e agenti chimici, tra farmaci e malattie ed infine tra farmaci e agenti chimici. Il test di KolmogorovSmirnov può essere usato per confrontare elementi con una distribuzione di probabilità. La distribuzione empirica $F_n$ per osservazioni \textit{iid}, è definito:
 \begin{equation}
 F_n(x) = \frac{1}{n} \sum\limits_{i=1}^n I[-\inf,x](x_i)
@@ -122,19 +120,21 @@ $D_n = sup_x[F_n(x)- F(x)]$
 La statistica KolmogorovSmirnov è stata usata non in valore assoluto per preservare il segno. Ciò aiuta a capire se un gene è up o down-regolato, ovviamente anche questi valori sono stati normalizzati tra $[-1:1]$
 \end{frame}
 
-\subsection{Implmentazione}
+\subsection{Implementazione}
 \begin{frame}
-\frametitle{Implmentazione}
-INSIdEnano è stato implemetato in $R$ usando Shiny come libreria per l'interfaccia grafica. Il sistema è stato implementato in una struttura client-server: il client è responsabile per la gestione dell'interfaccia, mentre il serve processa i dati dal database in base agli input dell'utente,  e restituisce il risultato di tale computazione al client.
+\frametitle{Implementazione}
+INSIdEnano è stato implemetato usando $R$ per il back end e Javascript per il front end. Per far comunicare i due linguaggi, sono state usate le librerie HTMLWidgets e Shiny di R. Il sistema è stato progettato con una architettura client-server: il client è responsabile della gestione dell'interfaccia, del rendering della network, della formulazione e della sottomissione delle query. Il server processa i dati dal database in base agli input dell'utente, e restituisce il risultato di tale computazione al client.
 \end{frame}
 
-
-\section{Problema}
+\section{Rendering della network}
+\subsection{Problema}
 \begin{frame}
-Parliamo ora della mole di questi dati,\\
-i nodi presenti in questo grafo sono: 3686
-per quanto riguarda gli archi la situazione risulta essere molto più complessa, perché come spiegato precedente sono state calcolate le distanze tra tutte le coppie. e quindi il grafo senza sogliature ha  \textasciitilde 15 000 000 archi.
-Il che rende questo grafo:\\
+\frametitle{Problema}
+\begin{alertblock}{Problema}
+I nodi presenti nel grafo sono 3686.
+Le distanze sono state calcolate per ogni coppia di nodi del grafo. Il numero di archi \e' quindi pari a $3686 * 3685 \approx 15 000 000$.
+\end{alertblock}
+L'elevato numero di archi rende questo grafo:\\
 \begin{center}
 \textbf{INVISUALIZZABILE}
 \end{center}
@@ -144,73 +144,47 @@ Il che rende questo grafo:\\
 METTERE IMMAGINE GRAFICO INVISUALIZZABILE
 \end{frame}
 
-\section{Soluzione}
-\subsection{Idea}
+\subsection{Soluzione}
 \begin{frame}
-\frametitle{Idea}
-La nostra idea consiste nel creare una visualizzazione esplorativa, di tale network. Partendo da un piccolo sottoinsieme di informazioni. E guidati dall'input dell'utente in maniera incrementale aggiungere il minor numero di informazioni alla network per aiutare l'utente nella scelta del prossimo nodo di cui avere informazioni.\\
+\frametitle{Soluzione}
+L'idea \'e quella di partire da un piccolo sottoinsieme di nodi, corrispondenti ai gruppi, ed organizzare l'esplorazione in maniera gerarchica. 
+\begin{itemize}
+	\item L'utente puo' espandere una categoria alla ricerca di un particolare nodo tramite doppioclick. Tale processo \'e iterabile per ogni sottocategoria.
+	\item Trovato il nodo di interesse, \'e possibile visualizzare le sue connessioni con il resto del grafo cliccando sul nodo tenendo premuto alt.
+\end{itemize}
 \medskip
-In questo modo le informazioni visualizzate sono quelle che l'utente ha richiesto e non tutte quelle presenti nella network. Parlando in termini di grafo in questo modo verranno visualizzati solo gli archi incidenti ai nodi scelti dall'utente. 
+In questo modo le informazioni renderizzate sono solo quelle che l'utente ha richiesto e non tutte quelle presenti nella network. 
 \end{frame}
 
 \begin{frame}
-L'idea spiegata precedentemente risulta realizzabile perché la sia per quanto riguarda gli agenti chimici che per i farmaci esistono delle gerarchie.
-Ovvero ogni elemento di queste due classi appartiene ad una supercasse, che rappresenta le caratteristiche generiche degli elementi che ne fanno parte. Esempio:\\
+\frametitle{Gerarchie(1/2)}
+L'idea precedentemente spiegata risulta realizzabile perché sia negli agenti chimici che nei farmaci esistono delle gerarchie: Esempio:\\
 \medskip
 \begin{center}
 ''Organic Chemicals :- Dichlorophen''\\
 ''Enzymes and Coenzymes :- Neopterin''
 \end{center}
-Tale gerarchia può essere aumentata con ulteriori livelli. Nel nostro caso però ci siamo fermati a un livello.
+Tale gerarchia può essere aumentata con ulteriori livelli. 
 \end{frame}
 
 \begin{frame}
-Però per quanto riguarda i nanomateriali e le malattie tali gerarchie non sono presenti. Il problema però non si pone per i nanomateriali perché essendo solo 29 risultano facilmente visualizzabili.\\
-\medskip
-Per le malattie il discorso è leggermente diverso essendo, circa 600 si sconsiglia di scegliere tale categoria per l'inizio dell'esplorazione
-\end{frame}
-
-\subsection{Realizzazione}
-\begin{frame}
-L'idea iniziale è quella di visualizzare solo le 4 macro-categorie:\\
-INSERIRE IMMAGINE
-\end{frame}
-
-\begin{frame}
-una volta scelta una categoria da cui partire l'esplorazione è possibile espanderla (doppio click) e visualizzare solo le sue sotto-categorie (se presenti).\\
-INSERIRE IMMAGINE
-\end{frame}
-
-\begin{frame}
-Scelta una sotto-categoria è possibile espanderla per visualizzare i veri nodi e le connessione tra di essi.\\
-INSERIRE IMMAGINE 
-\end{frame}
-
-\begin{frame}
-Una volta ripetuta questa operazione su di un'altra macro-categoria e successivamente su di una sua  sotto-categoria.\\
-INSERIRE IMMAGINE
-\end{frame}
-
-\begin{frame}
-E' possibile con (Alt + click) visualizzare gli archi che escono da quel nodo e che entrano in uno che fa parte di un'altra macro-categoria.\\
-INSERIRE IMMAGINE
-\end{frame}
-
-\begin{frame}
-Ricliccando un di un nodo che rappresenta una sotto-categoria o uno che rappresenta la macro-categoria i nodi che erano precedente espansi vengono eliminati e si torna ad una stato iniziale.\\
-\medskip
-La stessa cosa vale per le informazioni aggiunge attraverso alt + click, anche esse possono essere rimosse ricliccando sullo stesso nodo. 
-\end{frame}
-
-\begin{frame}
-Un'altra feature che è stata inserita per facilitare la visualizzazione è quella dello Shift + click. Che cliccato su di un nodo mette in evidenza tutti gli archi incidenti su quel nodo e i nodi che fanno parte del vicinato di quel nodo, nascondendo tutti gli altri.\\
-INSERIRE IMMAGINE.
-\end{frame}
-
-
-\begin{frame}
-Inoltre sono state aggiunte una serie di features accessorie che semplificano la visualizzazione come:
+\frametitle{Gerarchie (2/2)}
+Nei nanomateriali e nelle malattie tali gerarchie non sono presenti.
 \begin{itemize}
+	\item I nanomateriali possono essere visualizzati tutti in quanto sono solo 29.
+	\item Le malattie sono circa 600, per cui si sconsiglia di esplorare questa categoria inizialmente.
+\end{itemize}
+\medskip
+\end{frame}
+
+\subsection{Implementazione}
+\begin{frame}
+\frametitle{Features}
+La libreria progettata \'e stata dotata delle seguenti features:
+\begin{itemize}
+\item Espansione/Compressione dei nodi categoria tramite doppioclick.
+\item Messa in evidenza del vicinato di un nodo tramite shift+click.
+\item Visualizzazione a richiesta delle connessioni di un nodo con tutta la network tramite alt+click.
 \item Colorazione degli archi in base al valore (verdi: positivi, rossi: negativi)
 \item Spessore degli archi in base al valore
 \item Legenda in alto a sinistra per i nodi, a destra per gli archi
@@ -218,44 +192,61 @@ Inoltre sono state aggiunte una serie di features accessorie che semplificano la
 \item Label sui nodi.
 \item Drag and drop, release.
 \end{itemize}
-\end{frame}
 
-\begin{frame}
-INSERIRE LE IMMAGINI DELLA LISTA DI PRIMA
-\end{frame}
-
-\subsection{Implementazione}
 \begin{frame}
 \frametitle{Implementazione}
-Il core dell'implementazione è stata effettuata in Javascript, attraverso una libreria di visualizzazione  di grafi chiamata:
+E' stato realizzato un pacchetto R contenente una generica implementazione di un \alert{HTMLWidget}:
+\begin{itemize}
+	\item I file R contengono le funzioni da richiamare all'interno del codice R. Tali funzioni prendono in input i dati da renderizzare e si occupano di processarle e trasferirle alla libreria di rendering.
+	\item I file javascript contengono il codice per il rendering.
+\end{itemize}
+
+Il core della nostra implementazione è la parte di rendering. Abbiamo utilizzato una libreria di visualizzazione di grafi chiamata:
 \begin{center}
 \href{http://d3js.org/}{d3.js}
 \end{center}
-che si collega ad R attraverso un ''HTMLWidgets'' che può essere renderizzato all'interno di uno shiny widget oppure chiamato come visualizzatore di dati R generico.
 \end{frame}
 
 \begin{frame}
-E' stato creato il package R che è possibile installare su qualsiasi ambiente avente la versione di R maggiore di 3.2, per motivi di compatibilità.\\
-E' possibile trovare tale pacchetto al link:
-\begin{center}
-\url{https://github.com/Abelarm/BioInf_Project}
-\end{center}
+\frametitle{Informazioni}
+Il pacchetto creato \'e installabile su qualsiasi sistema operativo avente R $\geq$ 3.2.
+\noindent Per installarlo e' sufficiente eseguire i seguenti comandi da terminale:
+\begin{lstlisting}[language=bash]
+  $ git clone https://github.com/Abelarm/BioInf_Project
+  $ cd BioInf_Project/graphexplorer
+  $ R
+  > devtools::install()
+\end{lstlisting}
 \end{frame}
 
-\section{Bonus}
+\subsection{Bonus}
 \begin{frame}
-\frametitle{Bonus}
-Sulla stessa falsa riga, è stato creato un'ulteriore tool per la visualizzazione di un grafo diverso, ma sfruttando le stesse idee. Però il grafo non è quello completo, ma bensì la network che risulta dalla clustering in base ai nanomateriali.\\
+\frametitle{Nanocluster}
+È stato creato un'ulteriore tool per la visualizzazione di un grafo corrispondente alla network clusterizzata base ai nanomateriali.\\
 \medskip
-Dove per ogni nanomateriale vi sono solo i collegamenti con gli elementi facenti parti delle altre 3 macro-categorie.
+In questo caso, ogni nanomateriale \'e espandibile fino a due livelli:
+\begin{itemize}
+	\item Nel primo livello, vengono visualizzati nodi fittizi corrispondenti ad ogni categoria collegata al nanomateriale. 
+	\item Nel secondo livello, vengono visualizzati i nodi effettivi di una certa categoria.
+\end{itemize}
 \end{frame}
 
 \begin{frame}
-INSERIRE IMMAGINE GRAFO DI MERDA
+\frametitle{Nanocluster installation}
+\noindent Per installare il tool Nanocluster e' sufficiente eseguire i seguenti comandi da terminale:
+\begin{lstlisting}[language=bash]
+  $ git clone https://github.com/Abelarm/BioInf_Project
+  $ cd BioInf_Project/nanocluster
+  $ R
+  > devtools::install()
+\end{lstlisting}
 \end{frame}
 
+\section{Conclusioni}
 \begin{frame}
-INSERIRE VARIE IMMAGINI DEL NOSTRO GRAFO
+\frametitle{Considerazioni}
 \end{frame}
-
+\begin{frame}
+\frametitle{Sviluppi futuri}
+\end{frame}
 \end{document}
