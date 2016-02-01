@@ -1,6 +1,5 @@
 \documentclass{beamer}
 
-\usepackage{listings}
 \usepackage[italian]{babel}
 \usepackage[T1]{fontenc}
 \usepackage{beamerthemebjeldbak}
@@ -12,12 +11,10 @@
 \usepackage{multicol}
 \usepackage{amsfonts}
 \usepackage{hyperref}
+\usepackage{verbatim}
 
-\usepackage{listings}% http://ctan.org/pkg/listings
-\lstset{
-  basicstyle=\ttfamily,
-  mathescape
-}
+\lstset{language=bash}
+
 
 \setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
 
@@ -64,7 +61,7 @@ L'interazione tra queste entità è valutata in base al loro effetto sull'espres
 \frametitle{Associazione dei geni}
 Per ogni entità fenotipica nel dataset, è stata assegnata una lista di geni. In particolare:
 \begin{itemize}
-	\item Ad un'insieme di geni vengono associati tutte le malettie e tutti gli agenti chimici.
+	\item Ad un'insieme di geni vengono associati tutte le malattie e tutti gli agenti chimici.
 	\item Ad ogni farmaco e nanomateriale vengono associate liste ordinate di geni.
 \end{itemize}
 \medskip
@@ -84,7 +81,9 @@ E' stata calcolata la distanza per ogni coppia di entità. Tali distanze sono st
 \frametitle{Insieme di geni vs Insieme di geni}
 Il Jaccard index è stato utilizzato per calcolare la similarità tra due malattie, tra due agenti chimici o tra un agente chimico e una malattia.\\
 Dati due insiemi A e B \'e definito come:
-$$ J(A, B) = \frac{|A \cap B|}{|A \cup  B|} $$
+\begin{equation} 
+J(A, B) = \frac{|A \cap B|}{|A \cup  B|}
+\end{equation}
 Per ogni agente chimico vengono considerati due set di geni: quelli che sono up-regolati da quell'agente chimico e quelli che sono down-regolati.
 Per quelli down-regolati il Jaccard index è calcolato con il segno negativo.
 \end{frame}
@@ -93,7 +92,9 @@ Per quelli down-regolati il Jaccard index è calcolato con il segno negativo.
 \frametitle{Geni ordinati vs Geni ordinati}
 La distanza Kendall Tau è stata utilizzata per calcolare la similarità tra nanomateriali e nanomateriali, tra farmaci e farmaci e tra nanomateriali e farmaci, basata sulla lista ordinata dei geni.
 La distanza Kendall Tau tra due liste $T1$ e $T2$ è definita come segue:
-$$ K(T_1, T_2) = |(i, j): i < j, (T_1(i) < T_1(i) \wedge  T_2(i) > T_2(j)) \vee $$
+\begin{equation}
+K(T_1, T_2) = |(i, j): i < j, (T_1(i) < T_1(i) \wedge  T_2(i) > T_2(j)) \vee
+\end{equation}
 \begin{center}
 	$ (T_1(i) > T_i(j) \wedge T_2(i) < T_2(J))  | $
 \end{center}
@@ -123,7 +124,15 @@ La statistica KolmogorovSmirnov è stata usata non in valore assoluto per preser
 \subsection{Implementazione}
 \begin{frame}
 \frametitle{Implementazione}
-INSIdEnano è stato implemetato usando $R$ per il back end e Javascript per il front end. Per far comunicare i due linguaggi, sono state usate le librerie HTMLWidgets e Shiny di R. Il sistema è stato progettato con una architettura client-server: il client è responsabile della gestione dell'interfaccia, del rendering della network, della formulazione e della sottomissione delle query. Il server processa i dati dal database in base agli input dell'utente, e restituisce il risultato di tale computazione al client.
+INSIdEnano è stato implemetato usando $R$ per il back end e Javascript per il front end.
+\begin{itemize}
+ \item Per far comunicare i due linguaggi, sono state usate le librerie HTMLWidgets e Shiny di R. 
+ \item Sistema con architettura client-server: 
+ \begin{itemize}
+ \item Il client è responsabile della gestione dell'interfaccia, del rendering della network, della formulazione e della sottomissione delle query. 
+ \item Il server processa i dati dal database in base agli input dell'utente, e restituisce il risultato di tale computazione al client.
+\end{itemize}
+\end{itemize}  
 \end{frame}
 
 \section{Rendering della network}
@@ -132,7 +141,7 @@ INSIdEnano è stato implemetato usando $R$ per il back end e Javascript per il f
 \frametitle{Problema}
 \begin{alertblock}{Problema}
 I nodi presenti nel grafo sono 3686.
-Le distanze sono state calcolate per ogni coppia di nodi del grafo. Il numero di archi \e' quindi pari a $3686 * 3685 \approx 15 000 000$.
+Le distanze sono state calcolate per ogni coppia di nodi del grafo. Il numero di archi  quindi pari a $3686 * 3685 \approx 15000000$.
 \end{alertblock}
 L'elevato numero di archi rende questo grafo:\\
 \begin{center}
@@ -149,8 +158,8 @@ METTERE IMMAGINE GRAFICO INVISUALIZZABILE
 \frametitle{Soluzione}
 L'idea \'e quella di partire da un piccolo sottoinsieme di nodi, corrispondenti ai gruppi, ed organizzare l'esplorazione in maniera gerarchica. 
 \begin{itemize}
-	\item L'utente puo' espandere una categoria alla ricerca di un particolare nodo tramite doppioclick. Tale processo \'e iterabile per ogni sottocategoria.
-	\item Trovato il nodo di interesse, \'e possibile visualizzare le sue connessioni con il resto del grafo cliccando sul nodo tenendo premuto alt.
+\item L'utente puo' espandere una categoria alla ricerca di un particolare nodo tramite doppioclick. Tale processo \'e iterabile per ogni sottocategoria.
+\item Trovato il nodo di interesse, \'e possibile visualizzare le sue connessioni con il resto del grafo cliccando sul nodo tenendo premuto alt.
 \end{itemize}
 \medskip
 In questo modo le informazioni renderizzate sono solo quelle che l'utente ha richiesto e non tutte quelle presenti nella network. 
@@ -171,8 +180,8 @@ Tale gerarchia può essere aumentata con ulteriori livelli.
 \frametitle{Gerarchie (2/2)}
 Nei nanomateriali e nelle malattie tali gerarchie non sono presenti.
 \begin{itemize}
-	\item I nanomateriali possono essere visualizzati tutti in quanto sono solo 29.
-	\item Le malattie sono circa 600, per cui si sconsiglia di esplorare questa categoria inizialmente.
+\item I nanomateriali possono essere visualizzati tutti in quanto sono solo 29.
+\item Le malattie sono circa 600, per cui si sconsiglia di esplorare questa categoria inizialmente.
 \end{itemize}
 \medskip
 \end{frame}
@@ -182,6 +191,7 @@ Nei nanomateriali e nelle malattie tali gerarchie non sono presenti.
 \frametitle{Features}
 La libreria progettata \'e stata dotata delle seguenti features:
 \begin{itemize}
+\item Disposizione dei nodi attraverso force layout.
 \item Espansione/Compressione dei nodi categoria tramite doppioclick.
 \item Messa in evidenza del vicinato di un nodo tramite shift+click.
 \item Visualizzazione a richiesta delle connessioni di un nodo con tutta la network tramite alt+click.
@@ -192,6 +202,7 @@ La libreria progettata \'e stata dotata delle seguenti features:
 \item Label sui nodi.
 \item Drag and drop, release.
 \end{itemize}
+\end{frame}
 
 \begin{frame}
 \frametitle{Implementazione}
@@ -207,17 +218,20 @@ Il core della nostra implementazione è la parte di rendering. Abbiamo utilizzat
 \end{center}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Informazioni}
-Il pacchetto creato \'e installabile su qualsiasi sistema operativo avente R $\geq$ 3.2.
-\noindent Per installarlo e' sufficiente eseguire i seguenti comandi da terminale:
-\begin{lstlisting}[language=bash]
-  $ git clone https://github.com/Abelarm/BioInf_Project
-  $ cd BioInf_Project/graphexplorer
-  $ R
-  > devtools::install()
+Il pacchetto creato è installabile su qualsiasi sistema operativo avente R $\geq$ 3.2.
+Per installarlo e' sufficiente eseguire i seguenti comandi da terminale:
+\begin{footnotesize}
+\begin{lstlisting}
+ $ git clone https://github.com/Abelarm/BioInf_Project.git
+ $ cd BioInf_Project/graphexplorer
+ $ R
+ > devtools::install()
 \end{lstlisting}
+\end{footnotesize}
 \end{frame}
+
 
 \subsection{Bonus}
 \begin{frame}
@@ -231,22 +245,44 @@ In questo caso, ogni nanomateriale \'e espandibile fino a due livelli:
 \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Nanocluster installation}
-\noindent Per installare il tool Nanocluster e' sufficiente eseguire i seguenti comandi da terminale:
-\begin{lstlisting}[language=bash]
-  $ git clone https://github.com/Abelarm/BioInf_Project
-  $ cd BioInf_Project/nanocluster
-  $ R
-  > devtools::install()
+Per installare il tool Nanocluster e' sufficiente eseguire i seguenti comandi da terminale:
+\begin{footnotesize}
+\begin{lstlisting}
+ $ git clone https://github.com/Abelarm/BioInf_Project.git
+ $ cd BioInf_Project/nanocluster
+ $ R
+ > devtools::install()
 \end{lstlisting}
+\end{footnotesize}
 \end{frame}
 
 \section{Conclusioni}
+
 \begin{frame}
 \frametitle{Considerazioni}
+\begin{itemize}
+\item I pacchetti sviluppati non si prefiggono di essere strumenti a sé stanti.
+\item A partire dalla visualizzazione, risulta essere più semplice verificare esistenza e forza delle connessioni.
+\item Le intuizioni suggerite dalla visualizzazione grafica possono essere verificate interrogando i dati veri e propri.
+\end{itemize}
 \end{frame}
+
 \begin{frame}
 \frametitle{Sviluppi futuri}
+\begin{itemize}
+\item Rendere i tool più flessibili.
+\item Produrre la documentazione relativa a quanto sviluppato per sottomettere il pacchetto al CRAN.
+\end{itemize}
 \end{frame}
+
+\begin{frame}[plain]
+\begin{center}
+\begin{huge}
+Grazie per l'attenzione.
+\end{huge}
+\end{center}
+\end{frame}
+
 \end{document}
