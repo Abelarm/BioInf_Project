@@ -18,7 +18,7 @@
 
 \setbeamertemplate{itemize/enumerate body begin}{\footnotesize}
 
-\title{Big Network Visualizzation Tool for iNSIdEnano}
+\title{Big Network Visualization Tool for iNSIdEnano}
 \author{Luigi Giugliano$^1$, Marco Mecchia$^1$}
 \institute{$^1$Universit\'a degli studi di Salerno}
 
@@ -103,7 +103,7 @@ questa distanza è compresa tra 0 e $n*(n -1)$, dove $n$ è la lunghezza della l
 
 \begin{frame}
 \frametitle{Geni ordinati vs insieme di geni}
-La Gen Set Enrichment Analysis (GSEA), basata sul test di Kolmogorov-Smirnov, è stato usata per calcolare la similarità a coppie tra nanomateriali e malattie, tra nanomateriali e agenti chimici, tra farmaci e malattie ed infine tra farmaci e agenti chimici. Il test di KolmogorovSmirnov può essere usato per confrontare elementi con una distribuzione di probabilità. La distribuzione empirica $F_n$ per osservazioni \textit{iid}, è definito:
+La Gen Set Enrichment Analysis (GSEA), basata sul test di Kolmogorov-Smirnov, è stata usata per calcolare la similarità a coppie tra nanomateriali e malattie, tra nanomateriali e agenti chimici, tra farmaci e malattie ed infine tra farmaci e agenti chimici. Il test di KolmogorovSmirnov può essere usato per confrontare elementi con una distribuzione di probabilità. La distribuzione empirica $F_n$ per osservazioni \textit{iid}, è definito:
 \begin{equation}
 F_n(x) = \frac{1}{n} \sum\limits_{i=1}^n I[-\inf,x](x_i)
 \end{equation}
@@ -141,7 +141,7 @@ INSIdEnano è stato implemetato usando $R$ per il back end e Javascript per il f
 \frametitle{Problema}
 \begin{alertblock}{Problema}
 I nodi presenti nel grafo sono 3866.
-Le distanze sono state calcolate per ogni coppia di nodi del grafo. Il numero di archi  quindi pari a $3866 * 3865 \approx 15000000$.
+Le distanze sono state calcolate per ogni coppia di nodi del grafo. Il numero di archi è quindi pari a $3866 * 3865 \approx 15000000$.
 \end{alertblock}
 L'elevato numero di archi rende questo grafo:\\
 \begin{center}
@@ -158,7 +158,7 @@ L'elevato numero di archi rende questo grafo:\\
 \subsection{Soluzione}
 \begin{frame}
 \frametitle{Soluzione}
-L'idea \'e quella di partire da un piccolo sottoinsieme di nodi, corrispondenti ai gruppi, ed organizzare l'esplorazione in maniera gerarchica. 
+L'idea \'e quella di partire da un piccolo sottoinsieme di nodi, corrispondenti ai gruppi iniziali, ed organizzare l'esplorazione in maniera gerarchica. 
 \begin{itemize}
 \item L'utente puo' espandere una categoria alla ricerca di un particolare nodo tramite doppioclick. Tale processo \'e iterabile per ogni sottocategoria.
 \item Trovato il nodo di interesse, \'e possibile visualizzare le sue connessioni con il resto del grafo cliccando sul nodo tenendo premuto alt.
@@ -197,10 +197,10 @@ La libreria progettata \'e stata dotata delle seguenti features:
 \item Espansione/Compressione dei nodi categoria tramite doppioclick.
 \item Messa in evidenza del vicinato di un nodo tramite shift+click.
 \item Visualizzazione a richiesta delle connessioni di un nodo con tutta la network tramite alt+click.
-\item Colorazione degli archi in base al valore (verdi: positivi, rossi: negativi)
-\item Spessore degli archi in base al valore
-\item Legenda in alto a sinistra per i nodi, a destra per gli archi
-\item Label su gli archi
+\item Colorazione degli archi in base al valore. (verdi: positivi, rossi: negativi)
+\item Spessore degli archi in base al valore.
+\item Legenda in alto a sinistra per i nodi, a destra per gli archi.
+\item Label su gli archi.
 \item Label sui nodi.
 \item Drag and drop, release.
 \end{itemize}
@@ -236,6 +236,14 @@ Per installarlo e' sufficiente eseguire i seguenti comandi da terminale:
 
 
 \subsection{Bonus}
+
+\begin{frame}
+\frametitle{Bonus}
+\begin{center}
+\includegraphics[scale=0.27]{img/nano_cluster_network.png} 
+\end{center}
+\end{frame}
+
 \begin{frame}
 \frametitle{Nanocluster}
 È stato creato un'ulteriore tool per la visualizzazione di un grafo corrispondente alla network clusterizzata base ai nanomateriali.\\
@@ -247,11 +255,7 @@ In questo caso, ogni nanomateriale \'e espandibile fino a due livelli:
 \end{itemize}
 \end{frame}
 
-\begin{frame}
-\begin{center}
-\includegraphics[scale=0.3]{img/nano_cluster_network.png} 
-\end{center}
-\end{frame}
+
 
 \begin{frame}[fragile]
 \frametitle{Nanocluster installation}
