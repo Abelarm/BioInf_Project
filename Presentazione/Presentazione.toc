@@ -8,5 +8,5 @@
 \beamer@subsectionintoc {2}{1}{Problema}{13}{0}{2}
 \beamer@subsectionintoc {2}{2}{Soluzione}{15}{0}{2}
 \beamer@subsectionintoc {2}{3}{Implementazione}{18}{0}{2}
-\beamer@subsectionintoc {2}{4}{Bonus}{21}{0}{2}
+\beamer@subsectionintoc {2}{4}{Nanocluster}{21}{0}{2}
 \beamer@sectionintoc {3}{Conclusioni}{24}{0}{3}
